@@ -1,0 +1,1737 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>
+      Coletor LAMIS — Seção → Endereço → Produto (GTIN & Quantidade)
+    </title>
+    <style>
+      :root {
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --fg: #1e293b;
+        --accent: #3b82f6;
+        --accent-light: #dbeafe;
+        --ok: #22c55e;
+        --ok-light: #dcfce7;
+        --err: #ef4444;
+        --err-light: #fee2e2;
+        --warn: #f59e0b;
+        --warn-light: #fef3c7;
+        --radius: 8px;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font: 14px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+      }
+      header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--line);
+        background: var(--card);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        box-shadow: var(--shadow);
+      }
+      h1 {
+        font-size: 18px;
+        margin: 0;
+        flex: 1;
+        font-weight: 600;
+        color: var(--fg);
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 16px 0;
+        font-weight: 600;
+        color: var(--fg);
+      }
+      h3 {
+        font-size: 15px;
+        margin: 0 0 12px 0;
+        font-weight: 600;
+        color: var(--fg);
+      }
+      nav {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      nav button {
+        background: var(--bg);
+        border: 1px solid var(--line);
+        color: var(--muted);
+        padding: 8px 16px;
+        border-radius: var(--radius);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      }
+      nav button:hover {
+        background: var(--accent-light);
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      nav button.on {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+      }
+      main {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 20px;
+        margin: 0 0 20px 0;
+        box-shadow: var(--shadow);
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        color: var(--muted);
+        margin: 0 0 6px 0;
+        font-weight: 500;
+      }
+      input,
+      select,
+      button,
+      textarea {
+        background: var(--bg);
+        border: 1px solid var(--line);
+        color: var(--fg);
+        padding: 10px 12px;
+        border-radius: var(--radius);
+        font-size: 14px;
+        transition: all 0.2s ease;
+        width: 100%;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-light);
+      }
+      button {
+        cursor: pointer;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        white-space: nowrap;
+        width: auto;
+      }
+      button.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+      }
+      button.primary:hover {
+        background: #2563eb;
+        border-color: #2563eb;
+      }
+      button.success {
+        background: var(--ok);
+        border-color: var(--ok);
+        color: white;
+      }
+      button.success:hover {
+        background: #16a34a;
+        border-color: #16a34a;
+      }
+      button.danger {
+        background: var(--err);
+        border-color: var(--err);
+        color: white;
+      }
+      button.danger:hover {
+        background: #dc2626;
+        border-color: #dc2626;
+      }
+      button.ghost {
+        background: transparent;
+        border-color: var(--line);
+        color: var(--muted);
+      }
+      button.ghost:hover {
+        background: var(--bg);
+        border-color: var(--muted);
+        color: var(--fg);
+      }
+      .small {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      .row > * {
+        flex: 1;
+        min-width: 0;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 4px 10px;
+        margin: 0 6px 6px 0;
+        color: var(--muted);
+        font-size: 12px;
+        background: var(--bg);
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        margin-left: 6px;
+        font-size: 12px;
+        font-weight: 500;
+      }
+      .badge.ok {
+        border-color: var(--ok);
+        background: var(--ok-light);
+        color: var(--ok);
+      }
+      .badge.warn {
+        border-color: var(--warn);
+        background: var(--warn-light);
+        color: var(--warn);
+      }
+      .badge.err {
+        border-color: var(--err);
+        background: var(--err-light);
+        color: var(--err);
+      }
+      .note {
+        padding: 12px;
+        border-radius: var(--radius);
+        margin-top: 12px;
+        border: 1px solid var(--line);
+        background: var(--bg);
+        color: var(--muted);
+        font-size: 13px;
+      }
+      hr.sep {
+        border: 0;
+        border-top: 1px solid var(--line);
+        margin: 16px 0;
+      }
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      .table th {
+        background: var(--bg);
+        font-weight: 600;
+        text-align: left;
+      }
+      .table th,
+      .table td {
+        border-bottom: 1px solid var(--line);
+        padding: 10px 12px;
+      }
+      .table tr:last-child td {
+        border-bottom: none;
+      }
+      .hidden {
+        display: none !important;
+      }
+      #kbInput {
+        width: 100%;
+        font-size: 16px; /* Melhor para mobile */
+      }
+      select {
+        min-width: 180px;
+      }
+      label.highlight {
+        background: #000;
+        color: #fff !important;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: bold;
+      }
+
+      /* Responsividade melhorada */
+      @media (max-width: 768px) {
+        header {
+          padding: 12px;
+        }
+
+        h1 {
+          font-size: 16px;
+        }
+
+        main {
+          padding: 12px;
+        }
+
+        .card {
+          padding: 16px;
+        }
+
+        .row {
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        nav {
+          gap: 4px;
+        }
+
+        nav button {
+          padding: 6px 12px;
+          font-size: 12px;
+        }
+
+        .table {
+          font-size: 12px;
+        }
+
+        .table th,
+        .table td {
+          padding: 8px;
+        }
+
+        input,
+        select,
+        button,
+        textarea {
+          padding: 10px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .table {
+          display: block;
+          overflow-x: auto;
+          white-space: nowrap;
+        }
+
+        .pill,
+        .badge {
+          font-size: 11px;
+        }
+      }
+
+      /* Estilo para o vídeo da câmera */
+      #video {
+        width: 100%;
+        border-radius: var(--radius);
+        margin: 12px 0;
+        background: var(--bg);
+        border: 1px solid var(--line);
+      }
+
+      /* Loading states */
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      /* Melhorias visuais para checkboxes */
+      input[type="checkbox"] {
+        width: auto;
+        margin-right: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Coletor LAMIS — Seção → Endereço → Produto</h1>
+      <nav>
+        <button data-page="config" class="on">Configuração</button>
+        <button data-page="import">Importar Planilha</button>
+        <button data-page="leitura">Leitura</button>
+        <button data-page="tx">Transmissão</button>
+      </nav>
+    </header>
+
+    <main>
+      <!-- CONFIGURAÇÃO -->
+      <section id="page-config" class="card">
+        <h2>Configuração</h2>
+        <label>URL da API (POST)</label>
+        <input id="cfgUrl" placeholder="https://api.exemplo.com/coletas" />
+        <label>Token (Bearer)</label>
+        <input id="cfgToken" placeholder="TOKEN" />
+
+        <label>URL da Planilha (CSV ou XLSX)</label>
+        <input
+          id="cfgSheetUrl"
+          placeholder="https://exemplo.com/planilha.csv ou .xlsx"
+        />
+
+        <div class="row" style="margin-top: 8px">
+          <label class="small"
+            ><input type="checkbox" id="cfgCamEnabled" /> Habilitar câmera
+            (padrão: desabilitada)</label
+          >
+        </div>
+
+        <div class="row" style="margin-top: 16px">
+          <button id="btnSaveCfg" class="primary">Salvar</button>
+          <button id="btnLoadSheet" class="ghost">
+            Carregar planilha da URL
+          </button>
+          <button id="btnStartCam" class="ghost">Iniciar câmera</button>
+          <button id="btnStopCam">Parar câmera</button>
+        </div>
+
+        <div id="cfgStatus" class="small" style="margin-top: 12px">
+          Status: ...
+        </div>
+        <div class="note small">
+          Padrões da planilha: <b>DESCRICAO</b> (produto),
+          <b>EAN</b> (GTIN/EAN), <b>CODENDERECO</b> (endereço). Você pode
+          remapear no passo Importar.
+        </div>
+      </section>
+
+      <!-- IMPORTAR PLANILHA -->
+      <section id="page-import" class="card hidden">
+        <h2>Importar Planilha</h2>
+        <div class="row">
+          <div style="flex: 1; min-width: 260px">
+            <label>Arquivo local (.xlsx, .xls, .csv)</label>
+            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
+          </div>
+          <div style="display: flex; align-items: flex-end">
+            <button id="btnLoadFile" class="primary">Carregar arquivo</button>
+          </div>
+        </div>
+        <div class="row" style="margin-top: 8px">
+          <button id="btnLoadSheet2" class="ghost">
+            Ou carregar da URL configurada
+          </button>
+        </div>
+
+        <div id="xlsxStatus" class="note">Aguardando arquivo/URL...</div>
+
+        <div id="mapBox" class="hidden">
+          <h3>Mapeamento de Colunas</h3>
+          <div class="row">
+            <div>
+              <label>Produto (descrição)</label>
+              <select id="mapProduto"></select>
+            </div>
+            <div>
+              <label>GTIN/EAN (código)</label>
+              <select id="mapGtin"></select>
+            </div>
+            <div>
+              <label>Endereço</label>
+              <select id="mapEndereco"></select>
+            </div>
+          </div>
+          <div class="row" style="margin-top: 12px">
+            <button id="btnConfirmMap" class="success">
+              Confirmar mapeamento
+            </button>
+          </div>
+          <div id="sheetInfo" class="small" style="margin-top: 8px"></div>
+        </div>
+      </section>
+
+      <!-- SEÇÃO -->
+      <section id="page-secao" class="card hidden">
+        <h2>Seção (cadastro e escolha)</h2>
+        <div class="row">
+          <div style="flex: 1; min-width: 200px">
+            <label>Seção LAMIS</label>
+            <input id="secCod" inputmode="numeric" placeholder="0001" />
+          </div>
+        </div>
+
+        <hr class="sep" />
+        <div class="row">
+          <div style="flex: 1; min-width: 260px">
+            <label>Seções cadastradas</label>
+            <select id="secSelect"></select>
+          </div>
+          <!-- Botão 'Usar seção selecionada' removido conforme pedido -->
+        </div>
+        <div id="secMsg" class="small" style="margin-top: 6px"></div>
+      </section>
+
+      <!-- LEITURA -->
+      <section id="page-leitura" class="card hidden">
+        <h2>Leitura</h2>
+        <div class="small" id="statusInfo">
+          Etapa: <span id="etapa">Seção</span>
+          <span class="pill">Seção atual: <b id="secaoAtual">-</b></span>
+          <span class="pill">Endereço atual: <b id="addrAtual">-</b></span>
+          <span class="badge" id="modoBadge">Modo leitura</span>
+        </div>
+
+        <!-- vídeo oculto para câmera (sem quadro preto) -->
+        <video id="video" class="hidden" playsinline muted></video>
+
+        <div class="note" id="scanHint">
+          Agora bipando: <b>Seção</b>. Use o teclado/scanner USB ou habilite a
+          câmera em Configuração.
+        </div>
+        <input
+          id="kbInput"
+          placeholder="Foque aqui e bip! (Enter para enviar)"
+        />
+
+        <div class="row" style="margin-top: 12px">
+          <button id="btnTrocarSecao">Trocar Seção</button>
+          <button id="btnTrocarEndereco">Trocar Endereço</button>
+          <button id="btnDesfazer" class="danger">
+            Desfazer último produto
+          </button>
+        </div>
+
+        <hr class="sep" />
+        <table class="table" id="tbl">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Quando</th>
+              <th>Seção</th>
+              <th>Endereço</th>
+              <th>EAN</th>
+              <th>Qtd</th>
+              <th>Raw</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <!-- TRANSMISSÃO -->
+      <section id="page-tx" class="card hidden">
+        <h2>Transmissão</h2>
+        <div class="small">Exportar / Transmitir</div>
+        <div class="row" style="margin-top: 12px">
+          <button id="btnExportJson" class="success">Exportar JSON</button>
+          <button id="btnExportCsv">Exportar CSV</button>
+          <button id="btnTransmitPend" class="primary">
+            Transmitir pendentes
+          </button>
+          <button id="btnTransmitAll" class="ghost">Transmitir TUDO</button>
+          <button id="btnEncerrarContagem" class="danger">
+            Encerrar Contagem
+          </button>
+        </div>
+        <div id="sendMsg" class="small" style="margin-top: 12px"></div>
+      </section>
+    </main>
+    <!-- use version 0.20.3 -->
+    <script
+      type="text/javascript"
+      src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"
+    ></script>
+    <!-- Quagga2 fallback -->
+    <script src="https://unpkg.com/@ericblade/quagga2/dist/quagga.js"></script>
+    <!-- Lazy loader for XLSX and JSZip -->
+    <script>
+      (function () {
+        function ensureXLSX(callback) {
+          if (window.XLSX) {
+            callback();
+            return;
+          }
+          var sources = [
+            "https://cdn.jsdelivr.net/npm/xlsx@0.20.0/dist/xlsx.full.min.js",
+            "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.0/xlsx.full.min.js",
+            "https://unpkg.com/xlsx@0.20.0/dist/xlsx.full.min.js",
+          ];
+          var i = 0;
+          (function tryNext() {
+            if (window.XLSX) {
+              callback();
+              return;
+            }
+            if (i >= sources.length) {
+              callback(new Error("XLSX indisponível"));
+              return;
+            }
+            var s = document.createElement("script");
+            s.src = sources[i++];
+            s.onload = function () {
+              setTimeout(tryNext, 0);
+            };
+            s.onerror = tryNext;
+            document.head.appendChild(s);
+          })();
+        }
+        function ensureJSZip(callback) {
+          if (window.JSZip) {
+            callback();
+            return;
+          }
+          var sources = [
+            "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js",
+            "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js",
+            "https://unpkg.com/jszip@3.10.1/dist/jszip.min.js",
+          ];
+          var i = 0;
+          (function tryNext() {
+            if (window.JSZip) {
+              callback();
+              return;
+            }
+            if (i >= sources.length) {
+              callback(new Error("JSZip indisponível"));
+              return;
+            }
+            var s = document.createElement("script");
+            s.src = sources[i++];
+            s.onload = function () {
+              setTimeout(tryNext, 0);
+            };
+            s.onerror = tryNext;
+            document.head.appendChild(s);
+          })();
+        }
+        window._ensureXLSX = ensureXLSX;
+        window._ensureJSZip = ensureJSZip;
+      })();
+    </script>
+
+    <script>
+      (function () {
+        // Estado
+        var state = {
+          config: { url: "", token: "", sheetUrl: "", camEnabled: false },
+          etapa: "secao", // secao -> endereco -> produto
+          secaoAtual: null,
+          enderecoAtual: null,
+          secoes: {},
+          coletas: [], // somente produtos nesta tabela
+          planilha: {
+            headers: [],
+            rows: [],
+            map: { produto: "DESCRICAO", gtin: "EAN", endereco: "CODENDERECO" },
+            indexByAddr: {},
+            indexByEAN: {},
+          },
+          camera: {
+            stream: null,
+            detector: null,
+            running: false,
+            devId: null,
+            lastText: "",
+            lastTs: 0,
+            usingQuagga: false,
+          },
+        };
+
+        function $(id) {
+          return document.getElementById(id);
+        }
+        function text(el, v) {
+          el.textContent = v;
+        }
+        function beep(ok) {
+          try {
+            var C = window.AudioContext || window.webkitAudioContext;
+            if (!C) return;
+            var ctx = new C();
+            var o = ctx.createOscillator(),
+              g = ctx.createGain();
+            o.connect(g);
+            g.connect(ctx.destination);
+            o.type = "sine";
+            o.frequency.value = ok ? 880 : 220;
+            g.gain.value = 0.06;
+            o.start();
+            setTimeout(function () {
+              o.stop();
+            }, 120);
+          } catch (e) {}
+        }
+        function fmt(ts) {
+          return new Date(ts).toLocaleString();
+        }
+        function save() {
+          try {
+            localStorage.setItem(
+              "coletor_lamis",
+              JSON.stringify(state, function (k, v) {
+                if (k === "stream" || k === "detector") return undefined;
+                return v;
+              })
+            );
+          } catch (e) {}
+        }
+        function load() {
+          try {
+            var s = JSON.parse(localStorage.getItem("coletor_lamis") || "{}");
+            if (s.config) state.config = s.config;
+            if (s.secoes) state.secoes = s.secoes;
+            if (s.coletas) state.coletas = s.coletas;
+            if (s.planilha && s.planilha.rows) state.planilha = s.planilha;
+            state.secaoAtual = s.secaoAtual || null;
+            state.enderecoAtual = s.enderecoAtual || null;
+            state.etapa = s.etapa || "secao";
+          } catch (e) {}
+        }
+        load();
+
+        // Navegação
+        Array.prototype.forEach.call(
+          document.querySelectorAll("nav button"),
+          function (btn) {
+            btn.onclick = function () {
+              var page = btn.getAttribute("data-page");
+              Array.prototype.forEach.call(
+                document.querySelectorAll("nav button"),
+                function (b) {
+                  b.classList.remove("on");
+                }
+              );
+              btn.classList.add("on");
+              showPage(page);
+              if (page === "leitura") focusKB();
+            };
+          }
+        );
+        function showPage(name) {
+          ["config", "import", "secao", "leitura", "tx"].forEach(function (p) {
+            var el = $("page-" + p);
+            if (!el) return;
+            el.classList.toggle("hidden", p !== name);
+          });
+        }
+        showPage("config");
+
+        function focusKB() {
+          var el = $("kbInput");
+          if (el) {
+            el.focus();
+            el.select && el.select();
+          }
+        }
+
+        // Inicializa UI
+        $("cfgUrl").value = state.config.url || "";
+        $("cfgToken").value = state.config.token || "";
+        $("cfgSheetUrl").value = state.config.sheetUrl || "";
+        $("cfgCamEnabled").checked = !!state.config.camEnabled;
+        updateStatus();
+        render();
+        fillSecSelect();
+        syncInfo();
+        updateHint();
+
+        // CONFIG
+        $("btnSaveCfg").onclick = function () {
+          state.config.url = $("cfgUrl").value.trim();
+          state.config.token = $("cfgToken").value.trim();
+          state.config.sheetUrl = $("cfgSheetUrl").value.trim();
+          state.config.camEnabled = !!$("cfgCamEnabled").checked;
+          save();
+          updateStatus("salvo");
+        };
+        $("btnLoadSheet").onclick = loadSheetFromConfig;
+        $("btnLoadSheet2").onclick = loadSheetFromConfig;
+
+        function updateStatus(extra) {
+          var parts = [
+            state.config.url ? "URL OK" : "URL faltando",
+            state.config.token ? "Token OK" : "Token faltando",
+            state.planilha.rows.length
+              ? "Planilha " + state.planilha.rows.length
+              : "Sem planilha",
+            "Câmera: " +
+              (state.config.camEnabled
+                ? "habilitada (parada)"
+                : "desabilitada"),
+          ];
+          if (extra) parts.push(" - " + extra);
+          text($("cfgStatus"), "Status: " + parts.join(" | "));
+        }
+
+        // ===== Importar planilha — arquivo local =====
+        var lastFile = null;
+        $("fileInput").addEventListener("change", function (e) {
+          lastFile = e.target.files[0] || null;
+        });
+        $("btnLoadFile").onclick = function () {
+          if (!lastFile) {
+            $("xlsxStatus").textContent = "Selecione um arquivo.";
+            return;
+          }
+          var f = lastFile;
+          var ext = (f.name.split(".").pop() || "").toLowerCase();
+          if (ext === "xlsx" || ext === "xls") {
+            readXLSXFile(f);
+          } else if (ext === "csv") {
+            var r2 = new FileReader();
+            r2.onload = function () {
+              try {
+                handleRows(parseCsv(r2.result));
+              } catch (err) {
+                $("xlsxStatus").textContent = "Erro CSV: " + err.message;
+              }
+            };
+            r2.readAsText(f);
+          } else {
+            $("xlsxStatus").textContent = "Use .xlsx/.xls/.csv";
+          }
+        };
+
+        function readXLSXFile(file) {
+          $("xlsxStatus").textContent = "Lendo XLSX...";
+          var r = new FileReader();
+          r.onload = function () {
+            window._ensureXLSX(function (err) {
+              if (err || !window.XLSX) {
+                $("xlsxStatus").textContent = "XLSX indisponível.";
+                return;
+              }
+              try {
+                var wb = window.XLSX.read(r.result, { type: "array" });
+                var ws = wb.Sheets[wb.SheetNames[0]];
+                var rows = window.XLSX.utils.sheet_to_json(ws, {
+                  defval: "",
+                  raw: false,
+                });
+                handleRows(rows);
+              } catch (e) {
+                $("xlsxStatus").textContent = "Erro XLSX: " + e.message;
+              }
+            });
+          };
+          r.readAsArrayBuffer(file);
+        }
+
+        // ===== Importar planilha — URL configurada =====
+        function loadSheetFromConfig() {
+          var url = state.config.sheetUrl;
+          if (!url) {
+            $("xlsxStatus").textContent =
+              "Informe a URL da planilha na Configuração.";
+            showPage("import");
+            return;
+          }
+
+          $("xlsxStatus").textContent = "Baixando planilha...";
+          fetch(url, { cache: "no-store" })
+            .then(function (res) {
+              // Tenta CSV primeiro, independentemente do Content-Type
+              return res
+                .clone()
+                .text()
+                .then(function (txt) {
+                  // Heurística: se parece ZIP (XLSX), pula CSV e vai pro fallback.
+                  var looksZip =
+                    txt &&
+                    txt.length > 4 &&
+                    txt.charCodeAt(0) === 0x50 && // 'P'
+                    txt.charCodeAt(1) === 0x4b; // 'K'
+
+                  if (!looksZip) {
+                    try {
+                      var rows = parseCsv(txt);
+                      if (rows && rows.length) {
+                        handleRows(rows);
+                        return { done: true };
+                      }
+                    } catch (e) {
+                      // ignora e tenta XLSX
+                    }
+                  }
+                  // Fallback: XLSX
+                  return res.arrayBuffer().then(function (buf) {
+                    return { done: false, buf: buf };
+                  });
+                });
+            })
+            .then(function (result) {
+              if (!result || result.done) return; // já tratou como CSV
+
+              window._ensureXLSX(function (err) {
+                if (err || !window.XLSX) {
+                  $("xlsxStatus").textContent =
+                    "XLSX indisponível. Use CSV ou habilite CDN.";
+                  return;
+                }
+                try {
+                  var wb = window.XLSX.read(result.buf, { type: "array" });
+                  var ws = wb.Sheets[wb.SheetNames[0]];
+                  var rows = window.XLSX.utils.sheet_to_json(ws, {
+                    defval: "",
+                    raw: false,
+                  });
+                  handleRows(rows);
+                } catch (e) {
+                  $("xlsxStatus").textContent = "Erro XLSX: " + e.message;
+                }
+              });
+            })
+            .catch(function (err) {
+              $("xlsxStatus").textContent =
+                "Erro ao baixar/ler planilha: " + err.message;
+            });
+        }
+        // ===== Parser CSV simples =====
+        function parseCsv(text) {
+          var lines = text.replace(/\r/g, "").split("\n");
+          if (!lines.length) return [];
+          var headers = lines[0].split(";");
+          if (headers.length === 1) headers = lines[0].split(",");
+          var rows = [];
+          for (var i = 1; i < lines.length; i++) {
+            var line = lines[i];
+            if (!line) continue;
+            var cols = line.split(";");
+            if (cols.length === 1) cols = line.split(",");
+            var o = {};
+            for (var j = 0; j < headers.length; j++) {
+              o[headers[j]] = cols[j] !== undefined ? cols[j] : "";
+            }
+            rows.push(o);
+          }
+          return rows;
+        }
+
+        // ===== Mapeamento & Indexação =====
+        function handleRows(rows) {
+          if (!rows || !rows.length) {
+            $("xlsxStatus").textContent = "Planilha vazia";
+            return;
+          }
+          state.planilha.headers = Object.keys(rows[0]);
+          state.planilha.rows = rows;
+          fillMapSelects(state.planilha.headers);
+          $("mapBox").classList.remove("hidden");
+          $("xlsxStatus").textContent =
+            "Planilha carregada. Confirme o mapeamento.";
+          updateStatus("planilha carregada");
+        }
+        function fillMapSelects(headers) {
+          var mp = state.planilha.map || {
+            produto: "DESCRICAO",
+            gtin: "EAN",
+            endereco: "CODENDERECO",
+          };
+          function fill(selId, preferred) {
+            var sel = $(selId);
+            sel.innerHTML = "";
+            headers.forEach(function (h) {
+              var o = document.createElement("option");
+              o.value = h;
+              o.textContent = h;
+              sel.appendChild(o);
+            });
+            if (headers.indexOf(preferred) >= 0) sel.value = preferred;
+            else sel.selectedIndex = 0;
+          }
+          fill("mapProduto", mp.produto || "DESCRICAO");
+          fill("mapGtin", mp.gtin || "EAN");
+          fill("mapEndereco", mp.endereco || "CODENDERECO");
+          $("sheetInfo").textContent = "Colunas: " + headers.join(", ");
+        }
+        $("btnConfirmMap").onclick = function () {
+          state.planilha.map = {
+            produto: $("mapProduto").value,
+            gtin: $("mapGtin").value,
+            endereco: $("mapEndereco").value,
+          };
+          buildIndex();
+          save();
+          $("xlsxStatus").textContent = "Mapeamento salvo. Índices prontos.";
+          showPage("leitura");
+          focusKB();
+        };
+        function normalizeGTIN(s) {
+          var d = String(s || "").replace(/\D/g, "");
+          return d.replace(/^0+/, "");
+        }
+        function buildIndex() {
+          var rows = state.planilha.rows,
+            mp = state.planilha.map;
+          var idxAddr = {},
+            idxEAN = {};
+          for (var i = 0; i < rows.length; i++) {
+            var r = rows[i];
+            var prod = (r[mp.produto] || "").toString().trim();
+            var ean = normalizeGTIN(r[mp.gtin]);
+            var end = (r[mp.endereco] || "").toString().trim();
+            if (ean) {
+              idxEAN[ean] = { produto: prod, endereco: end, row: r };
+            }
+            if (end) {
+              idxAddr[end] = true;
+            }
+          }
+          state.planilha.indexByAddr = idxAddr;
+          state.planilha.indexByEAN = idxEAN;
+          $("sheetInfo").innerHTML =
+            "Linhas: " +
+            rows.length +
+            " | Endereços: " +
+            Object.keys(idxAddr).length +
+            " | GTINs: " +
+            Object.keys(idxEAN).length;
+        }
+
+        // ===== Câmera (habilitar em Configuração) =====
+        $("btnStartCam").onclick = startCam;
+        $("btnStopCam").onclick = stopCam;
+        function startCam() {
+          if (!state.config.camEnabled) {
+            state.config.camEnabled = true;
+            $("cfgCamEnabled").checked = true;
+            save();
+          }
+          if (state.camera.running) return;
+          if (window.BarcodeDetector) {
+            state.camera.detector = new window.BarcodeDetector({
+              formats: [
+                "qr_code",
+                "ean_13",
+                "code_128",
+                "code_39",
+                "ean_8",
+                "upc_e",
+                "upc_a",
+                "itf",
+                "codabar",
+                "data_matrix",
+                "pdf417",
+                "aztec",
+              ],
+            });
+            navigator.mediaDevices
+              .getUserMedia({
+                audio: false,
+                video: { facingMode: "environment" },
+              })
+              .then(function (stream) {
+                state.camera.stream = stream;
+                $("video").srcObject = stream;
+                $("video").play();
+                $("video").classList.remove("hidden");
+                state.camera.running = true;
+                loop();
+              })
+              .catch(function (err) {
+                alert("Erro câmera: " + err.message);
+              });
+          } else if (window.Quagga) {
+            state.camera.running = true;
+            state.camera.usingQuagga = true;
+            $("video").classList.remove("hidden");
+            Quagga.init(
+              {
+                inputStream: {
+                  name: "Live",
+                  type: "LiveStream",
+                  target: $("video"),
+                  constraints: { facingMode: "environment" },
+                },
+                decoder: {
+                  readers: [
+                    "ean_reader",
+                    "code_128_reader",
+                    "code_39_reader",
+                    "upc_reader",
+                    "upc_e_reader",
+                    "codabar_reader",
+                    "i2of5_reader",
+                  ],
+                },
+              },
+              function (err) {
+                if (err) {
+                  state.camera.running = false;
+                  alert("Erro Quagga: " + err.message);
+                  return;
+                }
+                Quagga.start();
+                Quagga.onDetected(function (d) {
+                  if (!state.camera.running) return;
+                  var code = d && d.codeResult && d.codeResult.code;
+                  if (code) {
+                    onScan(code, "quagga");
+                  }
+                });
+              }
+            );
+          } else {
+            alert("Sem suporte a câmera. Use scanner USB.");
+          }
+          updateStatus();
+        }
+        function stopCam() {
+          if (!state.camera.running) return;
+          if (state.camera.usingQuagga && window.Quagga) {
+            try {
+              Quagga.stop();
+            } catch (e) {}
+          }
+          if (state.camera.stream) {
+            var t = state.camera.stream.getTracks();
+            t.forEach(function (tr) {
+              tr.stop();
+            });
+          }
+          state.camera.stream = null;
+          state.camera.running = false;
+          $("video").classList.add("hidden");
+          updateStatus();
+        }
+        function loop() {
+          if (!state.camera.running) return;
+          if (state.camera.detector) {
+            state.camera.detector
+              .detect($("video"))
+              .then(function (list) {
+                if (list && list.length) {
+                  var bc = list[0];
+                  var val = bc.rawValue || bc.displayValue || "";
+                  if (val) onScan(val, bc.format || bc.type || "unknown");
+                }
+                requestAnimationFrame(loop);
+              })
+              .catch(function () {
+                requestAnimationFrame(loop);
+              });
+          }
+        }
+
+        // ===== Seções =====
+        function pad4(v) {
+          v = String(v || "").replace(/\D/g, "");
+          return v;
+        }
+        function isExactly4(v) {
+          var d = pad4(v);
+          return d.length === 4;
+        }
+        function isMoreThan4(v) {
+          return pad4(v).length > 4;
+        }
+        function fillSecSelect() {
+          var sel = $("secSelect");
+          sel.innerHTML = "";
+          var keys = Object.keys(state.secoes).sort();
+          if (!keys.length) {
+            var o = document.createElement("option");
+            o.value = "";
+            o.textContent = "Nenhuma seção cadastrada";
+            sel.appendChild(o);
+          }
+          keys.forEach(function (k) {
+            var o = document.createElement("option");
+            o.value = k;
+            o.textContent = k;
+            sel.appendChild(o);
+          });
+          if (state.secaoAtual) sel.value = state.secaoAtual;
+        }
+
+        // ===== Leitura =====
+        $("btnTrocarSecao").onclick = function () {
+          state.etapa = "secao";
+          state.enderecoAtual = null;
+          save();
+          syncInfo();
+          updateHint();
+          showPage("leitura");
+          focusKB();
+        };
+        $("btnTrocarEndereco").onclick = function () {
+          state.etapa = "endereco";
+          save();
+          updateHint();
+          focusKB();
+        };
+        $("btnDesfazer").onclick = function () {
+          for (var i = state.coletas.length - 1; i >= 0; i--) {
+            if (state.coletas[i].tipo === "produto") {
+              state.coletas.splice(i, 1);
+              break;
+            }
+          }
+          save();
+          render();
+          focusKB();
+        };
+        $("kbInput").addEventListener("keydown", function (e) {
+          if (e.key === "Enter") {
+            var v = $("kbInput").value;
+            $("kbInput").value = "";
+            if (v) onScan(v, "keyboard");
+          }
+        });
+
+        function updateHint() {
+          var step = state.etapa;
+          var msg =
+            step === "secao"
+              ? "Agora bipando: Seção (4 dígitos)"
+              : step === "endereco"
+              ? "Agora bipando: Endereço (deve existir na planilha)"
+              : "Agora bipando: Produto (GTIN do código)";
+          $("scanHint").innerHTML = msg;
+
+          // limpa destaques
+          document.querySelectorAll("label").forEach(function (lbl) {
+            lbl.classList.remove("highlight");
+          });
+
+          // aplica destaque conforme etapa
+          if (step === "secao") {
+            document
+              .querySelector("#page-secao label")
+              .classList.add("highlight");
+          } else if (step === "endereco") {
+            document
+              .querySelector("#mapEndereco")
+              .parentElement.querySelector("label")
+              .classList.add("highlight");
+          } else if (step === "produto") {
+            document
+              .querySelector("#mapProduto")
+              .parentElement.querySelector("label")
+              .classList.add("highlight");
+          }
+        }
+
+        function syncInfo() {
+          text(
+            $("etapa"),
+            state.etapa === "secao"
+              ? "Seção"
+              : state.etapa === "endereco"
+              ? "Endereço"
+              : "Produto"
+          );
+          text($("secaoAtual"), state.secaoAtual || "-");
+          text($("addrAtual"), state.enderecoAtual || "-");
+        }
+
+        function onScan(textVal, format) {
+          var now = Date.now();
+          if (
+            textVal === state.camera.lastText &&
+            now - state.camera.lastTs < 700
+          ) {
+            return;
+          }
+          state.camera.lastText = textVal;
+          state.camera.lastTs = now;
+
+          if (state.etapa === "secao") {
+            var d = pad4(textVal);
+            if (isMoreThan4(d)) {
+              alert("Seção invalida (Maior que 4 dígitos)");
+              focusKB();
+              return;
+            }
+            if (!isExactly4(d)) {
+              alert("Informe exatamente 4 dígitos.");
+              focusKB();
+              return;
+            }
+            setSection(d, true, format);
+            return;
+          }
+          if (state.etapa === "endereco") {
+            var addr = String(textVal || "").trim();
+            var exists = !!state.planilha.indexByAddr[addr];
+            if (!exists) {
+              alert("Endereço não encontrado na planilha.");
+              focusKB();
+              return;
+            }
+            state.enderecoAtual = addr;
+            state.etapa = "produto";
+            save();
+            syncInfo();
+            updateHint();
+            focusKB();
+            return;
+          }
+          // produto
+          if (!state.secaoAtual) {
+            alert("Bipe a Seção (4 dígitos) primeiro.");
+            focusKB();
+            return;
+          }
+          if (!state.enderecoAtual) {
+            alert("Bipe o Endereço (da planilha) primeiro.");
+            focusKB();
+            return;
+          }
+
+          var parsed = parseProdutoCode(textVal);
+          if (!parsed.ok) {
+            alert("Produto: código de barras não possui todos os campos.");
+            focusKB();
+            return;
+          }
+          var eankey = parsed.ean;
+          var existsEAN = !!state.planilha.indexByEAN[eankey];
+          if (!existsEAN) {
+            alert("GTIN/EAN não encontrado na planilha.");
+            focusKB();
+            return;
+          }
+
+          state.coletas.push({
+            ts: now,
+            tipo: "produto",
+            secaoCodigo: state.secaoAtual,
+            enderecoId: state.enderecoAtual,
+            ean: eankey,
+            ean_raw: parsed.ean_raw,
+            quantidade: parsed.quantidade,
+            raw: textVal,
+            status: "OK",
+            transmitido: false,
+            transmitidoEm: null,
+          });
+          save();
+          render();
+          focusKB();
+        }
+
+        function setSection(code, advance, fmt) {
+          if (isMoreThan4(code)) {
+            alert("Seção invalida (Maior que 4 dígitos)");
+            return;
+          }
+          if (!isExactly4(code)) {
+            alert("Informe exatamente 4 dígitos.");
+            return;
+          }
+          if (!state.secoes[code]) state.secoes[code] = ""; // auto-salvar
+          state.secaoAtual = code;
+          if (advance) {
+            state.etapa = "endereco";
+          }
+          save();
+          fillSecSelect();
+          syncInfo();
+          updateHint();
+          showPage("leitura");
+          focusKB();
+          beep(true);
+        }
+
+        // parser de produto
+        function parseProdutoCode(raw) {
+          var digits = String(raw).replace(/\D/g, "");
+          if (digits.length < 34) {
+            return { ok: false, motivo: "curto", digits: digits };
+          }
+          var eanRaw14 = digits.slice(2, 16);
+          var eanNorm = normalizeGTIN(eanRaw14);
+          var decCode = digits.slice(24, 28);
+          var qtdRaw = digits.slice(28, 34);
+          var dec = decCode === "3102" ? 2 : 3;
+          var quantidade = parseInt(qtdRaw, 10) / Math.pow(10, dec);
+          return {
+            ok: true,
+            ean: eanNorm,
+            ean_raw: eanRaw14,
+            quantidade: quantidade,
+          };
+        }
+        function normalizeGTIN(s) {
+          var d = String(s || "").replace(/\D/g, "");
+          return d.replace(/^0+/, "");
+        }
+
+        // Render tabela
+        function render() {
+          var tb = $("tbl").querySelector("tbody");
+          var html = "";
+          var idx = 0;
+          for (var i = 0; i < state.coletas.length; i++) {
+            var r = state.coletas[i];
+            if (r.tipo !== "produto") continue;
+            idx++;
+            html =
+              "<tr><td>" +
+              idx +
+              "</td><td>" +
+              fmt(r.ts) +
+              "</td><td>" +
+              (r.secaoCodigo || "") +
+              "</td><td>" +
+              (r.enderecoId || "") +
+              "</td><td>" +
+              (r.ean || "") +
+              "</td><td>" +
+              (r.quantidade != null ? r.quantidade : "") +
+              "</td><td>" +
+              (r.raw || "") +
+              "</td><td>" +
+              (r.status || "") +
+              "</td></tr>";
+          }
+          tb.innerHTML = html;
+        }
+
+        // ===== Transmissão / Encerrar =====
+        function filterColetas(mode) {
+          var arr = [];
+          for (var i = 0; i < state.coletas.length; i++) {
+            var r = state.coletas[i];
+            if (r.tipo !== "produto") continue;
+            if (mode === "all") arr.push(r);
+            else if (mode === "pending") {
+              if (!r.transmitido) arr.push(r);
+            }
+          }
+          return arr;
+        }
+        function buildPayload(list) {
+          var meta = {
+            app: "coletor-lamis",
+            versao: "1.2.1",
+            enviadoEm: new Date().toISOString(),
+          };
+          var grupos = {};
+          for (var i = 0; i < list.length; i++) {
+            var r = list[i];
+            var key =
+              (r.secaoCodigo || "(sem)") + "|" + (r.enderecoId || "(sem)");
+            if (!grupos[key])
+              grupos[key] = {
+                secao_codigo: r.secaoCodigo || null,
+                endereco_id: r.enderecoId || null,
+                leituras: [],
+              };
+            grupos[key].leituras.push({
+              ts: new Date(r.ts).toISOString(),
+              secao_codigo: r.secaoCodigo || null,
+              endereco_id: r.enderecoId || null,
+              produto_ean: r.ean || null,
+              produto_ean_raw: r.ean_raw || null,
+              quantidade: r.quantidade != null ? r.quantidade : null,
+              raw: r.raw || "",
+            });
+          }
+          var lista = [];
+          for (var k in grupos) {
+            lista.push(grupos[k]);
+          }
+          return { meta: meta, mapeamento: state.planilha.map, grupos: lista };
+        }
+        $("btnExportJson").onclick = function () {
+          var p = buildPayload(filterColetas("all"));
+          download("coletas.json", JSON.stringify(p, null, 2));
+        };
+        $("btnExportCsv").onclick = function () {
+          var csv = toCsv();
+          download("coletas.csv", csv);
+        };
+        $("btnTransmitPend").onclick = function () {
+          transmit("pending");
+        };
+        $("btnTransmitAll").onclick = function () {
+          transmit("all");
+        };
+        $("btnEncerrarContagem").onclick = endCounting;
+
+        function toCsv() {
+          var rows = state.coletas;
+          if (!rows.length) return "";
+          var headers = [
+            "index",
+            "ts",
+            "secao",
+            "endereco",
+            "ean",
+            "ean_raw",
+            "quantidade",
+            "raw",
+            "status",
+            "transmitido",
+            "transmitidoEm",
+          ];
+          var out = headers.join(";") + "\n";
+          var idx = 0;
+          for (var i = 0; i < rows.length; i++) {
+            var r = rows[i];
+            if (r.tipo !== "produto") continue;
+            idx++;
+            out +=
+              [
+                idx,
+                new Date(r.ts).toISOString(),
+                r.secaoCodigo || "",
+                r.enderecoId || "",
+                r.ean || "",
+                r.ean_raw || "",
+                r.quantidade != null ? r.quantidade : "",
+                r.raw || "",
+                r.status || "",
+                r.transmitido ? "1" : "0",
+                r.transmitidoEm || "",
+              ].join(";") + "\n";
+          }
+          return out;
+        }
+        function download(name, content) {
+          var blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement("a");
+          a.href = url;
+          a.download = name;
+          a.click();
+          setTimeout(function () {
+            URL.revokeObjectURL(url);
+          }, 1500);
+        }
+        function txPost(list) {
+          return new Promise(function (resolve, reject) {
+            if (!state.config.url || !state.config.token) {
+              reject(new Error("Configure URL e Token."));
+              return;
+            }
+            var payload = buildPayload(list);
+            var headers = {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + state.config.token,
+            };
+            fetch(state.config.url, {
+              method: "POST",
+              headers: headers,
+              body: JSON.stringify(payload),
+            })
+              .then(function (res) {
+                return res.text().then(function (t) {
+                  return { ok: res.ok, status: res.status, text: t };
+                });
+              })
+              .then(function (r) {
+                if (!r.ok) throw new Error("HTTP " + r.status + " - " + r.text);
+                resolve(r.text || "");
+              })
+              .catch(reject);
+          });
+        }
+        function transmit(mode) {
+          var list = filterColetas(mode);
+          if (!list.length) {
+            $("sendMsg").innerHTML =
+              '<span class="badge warn">Nada para transmitir (' +
+              mode +
+              ")</span>";
+            return;
+          }
+          $("sendMsg").innerHTML =
+            "Transmitindo " + list.length + " leituras...";
+          txPost(list)
+            .then(function (resp) {
+              var now = new Date().toISOString();
+              list.forEach(function (r) {
+                r.transmitido = true;
+                r.transmitidoEm = now;
+              });
+              save();
+              render();
+              $("sendMsg").innerHTML =
+                '<span class="badge ok">OK</span><pre>' +
+                escapeHtml((resp || "").slice(0, 1200)) +
+                "</pre>";
+            })
+            .catch(function (err) {
+              $("sendMsg").innerHTML =
+                '<span class="badge err">Falha</span> ' +
+                escapeHtml(err.message);
+            });
+        }
+
+        // ===== Encerrar Contagem (ZIP + limpar) =====
+        function endCounting() {
+          if (!state.coletas.length) {
+            $("sendMsg").innerHTML =
+              '<span class="badge warn">Não há dados para encerrar.</span>';
+            return;
+          }
+          $("sendMsg").textContent = "Compactando e enviando...";
+          window._ensureJSZip(function (err) {
+            if (err || !window.JSZip) {
+              $("sendMsg").innerHTML =
+                '<span class="badge err">JSZip indisponível</span>';
+              return;
+            }
+            makeZipBlob()
+              .then(function (zipBlob) {
+                return txZip(zipBlob);
+              })
+              .then(function (respText) {
+                localStorage.removeItem("coletor_lamis");
+                state.etapa = "secao";
+                state.secaoAtual = null;
+                state.enderecoAtual = null;
+                state.secoes = {};
+                state.coletas = [];
+                save();
+                render();
+                syncInfo();
+                updateHint();
+                $("sendMsg").innerHTML =
+                  '<span class="badge ok">Encerrado</span><pre>' +
+                  escapeHtml((respText || "").slice(0, 1200)) +
+                  "</pre>";
+                showPage("leitura");
+              })
+              .catch(function (err2) {
+                $("sendMsg").innerHTML =
+                  '<span class="badge err">Falha ao encerrar</span> ' +
+                  escapeHtml(err2.message);
+              });
+          });
+        }
+
+        function makeZipBlob() {
+          return new Promise(function (resolve, reject) {
+            try {
+              var zip = new window.JSZip();
+              var payloadAll = buildPayload(filterColetas("all"));
+              var csv = toCsv();
+              zip.file("coletas.json", JSON.stringify(payloadAll, null, 2));
+              zip.file("coletas.csv", csv);
+              var cfg = {
+                url: state.config.url ? true : false,
+                sheetUrl: state.config.sheetUrl || "",
+                camEnabled: !!state.config.camEnabled,
+              };
+              zip.file("config.json", JSON.stringify(cfg, null, 2));
+              var fname =
+                "contagem_" +
+                new Date().toISOString().replace(/[:.]/g, "-") +
+                ".zip";
+              zip
+                .generateAsync({ type: "blob" })
+                .then(function (blob) {
+                  blob.name = fname;
+                  resolve(blob);
+                })
+                .catch(reject);
+            } catch (e) {
+              reject(e);
+            }
+          });
+        }
+
+        function txZip(blob) {
+          return new Promise(function (resolve, reject) {
+            if (!state.config.url || !state.config.token) {
+              reject(new Error("Configure URL e Token."));
+              return;
+            }
+            var fname = blob.name || "contagem_" + Date.now() + ".zip";
+            var fd = new FormData();
+            fd.append("file", blob, fname);
+            fetch(state.config.url, {
+              method: "POST",
+              headers: { Authorization: "Bearer " + state.config.token },
+              body: fd,
+            })
+              .then(function (res) {
+                return res.text().then(function (t) {
+                  return { ok: res.ok, status: res.status, text: t };
+                });
+              })
+              .then(function (r) {
+                if (r.ok) {
+                  resolve(r.text || "OK");
+                  return;
+                }
+                return fetch(state.config.url, {
+                  method: "POST",
+                  headers: {
+                    Authorization: "Bearer " + state.config.token,
+                    "Content-Type": "application/zip",
+                  },
+                  body: blob,
+                })
+                  .then(function (res) {
+                    return res.text().then(function (t) {
+                      return { ok: res.ok, status: res.status, text: t };
+                    });
+                  })
+                  .then(function (r2) {
+                    if (r2.ok) {
+                      resolve(r2.text || "OK");
+                    } else {
+                      throw new Error("HTTP " + r2.status + " - " + r2.text);
+                    }
+                  });
+              })
+              .catch(function (err) {
+                fetch(state.config.url, {
+                  method: "POST",
+                  headers: {
+                    Authorization: "Bearer " + state.config.token,
+                    "Content-Type": "application/zip",
+                  },
+                  body: blob,
+                })
+                  .then(function (res) {
+                    return res.text().then(function (t) {
+                      return { ok: res.ok, status: res.status, text: t };
+                    });
+                  })
+                  .then(function (r2) {
+                    if (r2.ok) {
+                      resolve(r2.text || "OK");
+                    } else {
+                      reject(new Error("HTTP " + r2.status + " - " + r2.text));
+                    }
+                  })
+                  .catch(reject);
+              });
+          });
+        }
+
+        // Util
+        function escapeHtml(s) {
+          return String(s).replace(/[&<>\"']/g, function (c) {
+            return {
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[c];
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>
