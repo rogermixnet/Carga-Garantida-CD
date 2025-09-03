@@ -616,49 +616,6 @@
         ></footer>
       </div>
     </div>
-    <!-- Polyfills mínimos p/ Android 6 (Marshmallow) -->
-    <script>
-      // Promise
-      (function(){
-        if (typeof window.Promise === 'undefined') {
-          /*! promise polyfill - minimal */
-          window.Promise=function(executor){var t=this,q=[],s="pending",v;function c(f){return function(x){if(s!=="pending")return;s=f;s==="fulfilled"?v=x:v=x;setTimeout(function(){for(var i=0;i<q.length;i++){try{var h=q[i][s==="fulfilled"?0:1];if(typeof h==="function"){var r=h(v);q[i][2].resolve(r);}else{q[i][2][s==="fulfilled"?"resolve":"reject"](v);}}catch(e){q[i][2].reject(e);}},0);}};t.then=function(onFul,onRej){return new Promise(function(resolve,reject){q.push([onFul,onRej,{resolve:resolve,reject:reject}]);});};executor(c("fulfilled"),c("rejected"));};
-          Promise.resolve=function(v){return new Promise(function(res){res(v);});};
-          Promise.reject=function(v){return new Promise(function(_,rej){rej(v);});};
-          Promise.all=function(arr){return new Promise(function(res,rej){var out=[],cnt=0;if(!arr.length)res([]);for(var i=0;i<arr.length;i++){(function(i){Promise.resolve(arr[i]).then(function(v){out[i]=v;if(++cnt===arr.length)res(out);},rej);})(i);} });};
-        }
-        // fetch básico usando XHR
-        if (typeof window.fetch === 'undefined') {
-          window.fetch = function(url, opts){opts=opts||{};return new Promise(function(res,rej){
-            var x=new XMLHttpRequest(); x.open(opts.method||'GET', url, true);
-            if (opts.headers){for(var k in opts.headers){x.setRequestHeader(k,opts.headers[k]);}}
-            x.onload=function(){res({ok:x.status>=200&&x.status<300,status:x.status,text:function(){return Promise.resolve(x.responseText);},json:function(){return Promise.resolve(JSON.parse(x.responseText));}});};
-            x.onerror=function(){rej(new TypeError('Network request failed'));};
-            x.send(opts.body||null);
-          });};
-        }
-      })();
-    </script>
-
-    <!-- Captura erros do boot (evita “tela branca”) -->
-    <script>
-      window.onerror = function (msg, src, line, col, err) {
-        try {
-          var details =
-            (msg || "") +
-            " @ " +
-            (src || "") +
-            ":" +
-            (line || 0) +
-            ":" +
-            (col || 0);
-          console.log("BootError:", details, err && (err.stack || err));
-          // Mostra algo visível no Android 6
-          alert("Erro ao iniciar: " + details);
-        } catch (e) {}
-        return false;
-      };
-    </script>
 
     <!-- Polyfills ES5/Android 6 -->
     <script src="https://cdn.jsdelivr.net/npm/core-js-bundle@3/minified.js"></script>
