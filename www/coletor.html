@@ -6,1967 +6,2176 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Carga Garantida — Coleta + Comparação (NUMCAR/EAN) — ES5</title>
 
-    <!-- Font Awesome -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+   <!-- Font Awesome -->
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+/>
 
-    <!-- XLSX -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.core.min.js"></script>
-    <!-- Quagga2 (scanner) -->
-    <script src="https://unpkg.com/@ericblade/quagga2/dist/quagga.js"></script>
+<!-- XLSX -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.core.min.js"></script>
+<!-- Quagga2 (scanner) -->
+<script src="https://unpkg.com/@ericblade/quagga2/dist/quagga.js"></script>
 
-    <style>
-      :root {
-        --bg: #f8fafc;
-        --panel: #fff;
-        --border: #e2e8f0;
-        --text: #334155;
-        --muted: #64748b;
-        --primary: #3b82f6;
-        --primary-light: #eff6ff;
-        --primary-600: #2563eb;
-        --danger: #ef4444;
-        --success: #10b981;
-        --warning: #f59e0b;
-        --shadow: rgba(0, 0, 0, 0.05);
-        --shadow-hover: rgba(0, 0, 0, 0.1);
-      }
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-      body {
-        background: var(--bg);
-        color: var(--text);
-        font-family: "Segoe UI", system-ui, -apple-system, Roboto, Ubuntu,
-          sans-serif;
-        line-height: 1.6;
-      }
-      .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px 16px;
-      }
-      .app {
-        background: var(--panel);
-        border-radius: 12px;
-        box-shadow: 0 4px 12px var(--shadow);
-        overflow: hidden;
-      }
-      .app-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 16px 24px;
-        background: #fff;
-        border-bottom: 1px solid var(--border);
-        flex-wrap: wrap;
-        gap: 15px;
-      }
-      .logo-container {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .logo-placeholder {
-        width: 40px;
-        height: 40px;
-        background: var(--primary-light);
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--primary);
-        font-size: 20px;
-      }
-      h1 {
-        font-size: 20px;
-        font-weight: 600;
-        color: #1e293b;
-        margin: 0;
-      }
-      .tabs {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-      .tab-btn {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        border: 1px solid var(--border);
-        background: #fff;
-        color: var(--text);
-        padding: 8px 16px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 500;
-        font-size: 14px;
-        transition: 0.2s;
-      }
-      .tab-btn:hover {
-        background: #f8fafc;
-        border-color: #cbd5e1;
-      }
-      .tab-btn[aria-selected="true"] {
-        background: var(--primary);
-        border-color: var(--primary);
-        color: #fff;
-      }
-      .content {
-        padding: 24px;
-      }
-      .hidden {
-        display: none !important;
-      }
-      .grid {
-        display: grid;
-        gap: 16px;
-      }
-      @media (max-width: 768px) {
-        .grid-2,
-        .grid-3,
-        .grid-4 {
-          grid-template-columns: 1fr;
-        }
-        .app-header {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-        .tabs {
-          width: 100%;
-          justify-content: center;
-        }
-      }
-      @media (min-width: 769px) and (max-width: 1024px) {
-        .grid-4 {
-          grid-template-columns: repeat(2, 1fr);
-        }
-        .grid-3 {
-          grid-template-columns: repeat(2, 1fr);
-        }
-      }
-      @media (min-width: 1025px) {
-        .grid-3 {
-          grid-template-columns: repeat(3, 1fr);
-        }
-        .grid-4 {
-          grid-template-columns: repeat(4, 1fr);
-        }
-        .grid-2 {
-          grid-template-columns: repeat(2, 1fr);
-        }
-      }
-      .card {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 16px;
-        box-shadow: 0 2px 4px var(--shadow);
-        transition: 0.2s;
-      }
-      .card:hover {
-        box-shadow: 0 4px 8px var(--shadow-hover);
-      }
-      .label {
-        display: block;
-        font-size: 13px;
-        color: var(--muted);
-        margin: 0 0 8px 2px;
-        font-weight: 500;
-      }
-      input[type="text"],
-      input[type="search"],
-      select {
-        width: 100%;
-        background: #fff;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        color: var(--text);
-        padding: 10px 12px;
-        outline: none;
-        font-size: 14px;
-        transition: 0.2s;
-      }
-      input:focus,
-      select:focus {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-      }
-      .row {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-        align-items: center;
-      }
-      .btn {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        border: 1px solid var(--border);
-        background: #fff;
-        color: var(--text);
-        padding: 10px 16px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 500;
-        font-size: 14px;
-        transition: 0.2s;
-      }
-      .btn:hover {
-        background: #f8fafc;
-        border-color: #cbd5e1;
-      }
-      .btn.primary {
-        background: var(--primary);
-        border-color: var(--primary);
-        color: #fff;
-      }
-      .btn.primary:hover {
-        background: var(--primary-600);
-        border-color: var(--primary-600);
-      }
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 6px 12px;
-        border: 1px solid var(--border);
-        border-radius: 20px;
-        font-size: 12px;
-        background: #f8fafc;
-        color: var(--muted);
-      }
-      .pill b {
-        color: var(--text);
-      }
-      .danger-text {
-        color: var(--danger);
-        font-size: 13px;
-        margin-top: 4px;
-        display: block;
-      }
-      .overlay {
-        position: relative;
-      }
-      .overlay::after {
-        content: "Preencha e salve o CPF na aba Configuração para continuar.";
-        position: absolute;
-        inset: 0;
-        background: rgba(255, 255, 255, 0.9);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 10px;
-        border: 1px dashed var(--border);
-        font-weight: 500;
-        color: var(--muted);
-        z-index: 10;
-        backdrop-filter: blur(2px);
-      }
-      .table-wrap {
-        overflow: auto;
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        margin-top: 16px;
-        max-height: 500px;
-      }
-      table {
-        border-collapse: separate;
-        border-spacing: 0;
-        width: 100%;
-        min-width: 900px;
-        background: #fff;
-      }
-      thead th {
-        position: sticky;
-        top: 0;
-        background: #f8fafc;
-        border-bottom: 1px solid var(--border);
-        padding: 12px 16px;
-        text-align: left;
-        font-size: 13px;
-        color: var(--muted);
-        font-weight: 600;
-      }
-      tbody td {
-        border-bottom: 1px dashed var(--border);
-        padding: 12px 16px;
-        font-size: 14px;
-      }
-      tbody tr:hover {
-        background: #f8fafc;
-      }
-      .right {
-        text-align: right;
-      }
-      .muted {
-        color: var(--muted);
-      }
-      .bad {
-        color: var(--danger);
-        font-weight: 600;
-      }
-      footer {
-        padding: 16px 24px;
-        border-top: 1px solid var(--border);
-        background: #f8fafc;
-        font-size: 13px;
-        color: var(--muted);
-      }
-      @media (max-width: 480px) {
-        .content {
-          padding: 16px;
-        }
-        .btn,
-        .tab-btn {
-          padding: 8px 12px;
-          font-size: 13px;
-        }
-        .pill {
-          padding: 4px 8px;
-          font-size: 11px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="app" id="app">
-        <header class="app-header">
-          <div class="logo-container">
-            <img src="logo-lamis.png" style="width: 20%" />
-            <div class="app-title">
-              <h1>Carga Garantida</h1>
-            </div>
-          </div>
-          <nav class="tabs" role="tablist">
-            <button
-              id="tabbtn-leitura"
-              class="tab-btn"
-              data-tab="leitura"
-              aria-selected="true"
+<style>
+  :root {
+    --bg: #f8fafc;
+    --panel: #fff;
+    --border: #e2e8f0;
+    --text: #334155;
+    --muted: #64748b;
+    --primary: #3b82f6;
+    --primary-light: #eff6ff;
+    --primary-600: #2563eb;
+    --danger: #ef4444;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --shadow: rgba(0, 0, 0, 0.05);
+    --shadow-hover: rgba(0, 0, 0, 0.1);
+  }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Ubuntu,
+      sans-serif;
+    line-height: 1.6;
+  }
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 16px;
+  }
+  .app {
+    background: var(--panel);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px var(--shadow);
+    overflow: hidden;
+  }
+  .app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  .logo-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-placeholder {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-light);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    font-size: 20px;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    transition: 0.2s;
+  }
+  .tab-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+  }
+  .tab-btn[aria-selected="true"] {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+  .content {
+    padding: 24px;
+  }
+  .hidden {
+    display: none !important;
+  }
+  .grid {
+    display: grid;
+    gap: 16px;
+  }
+  @media (max-width: 768px) {
+    .grid-2,
+    .grid-3,
+    .grid-4 {
+      grid-template-columns: 1fr;
+    }
+    .app-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .tabs {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .grid-4 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .grid-3 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (min-width: 1025px) {
+    .grid-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .grid-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .grid-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 2px 4px var(--shadow);
+    transition: 0.2s;
+  }
+  .card:hover {
+    box-shadow: 0 4px 8px var(--shadow-hover);
+  }
+  .label {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0 0 8px 2px;
+    font-weight: 500;
+  }
+  input[type="text"],
+  input[type="search"],
+  select {
+    width: 100%;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 10px 12px;
+    outline: none;
+    font-size: 14px;
+    transition: 0.2s;
+  }
+  input:focus,
+  select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  }
+  .row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    transition: 0.2s;
+  }
+  .btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+  }
+  .btn.primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+  .btn.primary:hover {
+    background: var(--primary-600);
+    border-color: var(--primary-600);
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 12px;
+    background: #f8fafc;
+    color: var(--muted);
+  }
+  .pill b {
+    color: var(--text);
+  }
+  .danger-text {
+    color: var(--danger);
+    font-size: 13px;
+    margin-top: 4px;
+    display: block;
+  }
+  .overlay {
+    position: relative;
+  }
+  .overlay::after {
+    content: "Preencha e salve o CPF na aba Configuração para continuar.";
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: 1px dashed var(--border);
+    font-weight: 500;
+    color: var(--muted);
+    z-index: 10;
+    backdrop-filter: blur(2px);
+  }
+  .table-wrap {
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-top: 16px;
+    max-height: 500px;
+  }
+  table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    min-width: 900px;
+    background: #fff;
+  }
+  thead th {
+    position: sticky;
+    top: 0;
+    background: #f8fafc;
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  tbody td {
+    border-bottom: 1px dashed var(--border);
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  tbody tr:hover {
+    background: #f8fafc;
+  }
+  .right {
+    text-align: right;
+  }
+  .muted {
+    color: var(--muted);
+  }
+  .bad {
+    color: var(--danger);
+    font-weight: 600;
+  }
+  footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    background: #f8fafc;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  @media (max-width: 480px) {
+    .content {
+      padding: 16px;
+    }
+    .btn,
+    .tab-btn {
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+    .pill {
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+  }
+  /* ===== Modal simples para EAN-13 (quantidade) ===== */
+  .modal {
+    position: fixed;
+    top: 0; right: 0; bottom: 0; left: 0; /* substitui 'inset: 0' */
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .modal.hidden {
+    display: none !important;
+  }
+  .modal-box {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    width: 90%;
+    max-width: 360px;
+    box-shadow: 0 4px 12px var(--shadow-hover);
+  }
+</style>
+</head> <body> <div class="container"> <div class="app" id="app"> <header class="app-header"> <div class="logo-container"> <img src="logo-lamis.png" style="width: 20%" /> <div class="app-title"> <h1>Carga Garantida V3.0</h1> </div> </div> <nav class="tabs" role="tablist"> <button id="tabbtn-leitura" class="tab-btn" data-tab="leitura" aria-selected="true" > <i class="fas fa-barcode"></i> Coleta </button> <button id="tabbtn-config" class="tab-btn" data-tab="config"> <i class="fas fa-cog"></i> Configuração </button> <button id="tabbtn-tx" class="tab-btn" data-tab="tx"> <i class="fas fa-paper-plane"></i> Transmissão </button> </nav> </header>
+
+    <section id="tab-leitura" class="content">
+      <div id="lock-leitura" class="hidden"></div>
+      <div id="leitura-wrap">
+        <div class="grid grid-4">
+          <div class="card">
+            <label class="label" for="codigoCarga"
+              ><i class="fas fa-list-ol"></i> Nº Da Carga
+              <span class="danger-text">*</span></label
             >
-              <i class="fas fa-barcode"></i> Coleta
-            </button>
-            <button id="tabbtn-config" class="tab-btn" data-tab="config">
-              <i class="fas fa-cog"></i> Configuração
-            </button>
-            <button id="tabbtn-tx" class="tab-btn" data-tab="tx">
-              <i class="fas fa-paper-plane"></i> Transmissão
-            </button>
-          </nav>
-        </header>
-
-        <!-- COLETA (antes Leitura) -->
-        <section id="tab-leitura" class="content">
-          <div id="lock-leitura" class="hidden"></div>
-          <div id="leitura-wrap">
-            <div class="grid grid-4">
-              <div class="card">
-                <label class="label" for="codigoCarga"
-                  ><i class="fas fa-list-ol"></i> Nº Da Carga
-                  <span class="danger-text">*</span></label
-                >
-                <input
-                  id="codigoCarga"
-                  type="text"
-                  inputmode="numeric"
-                  placeholder="Ex.: 2192459"
-                />
-              </div>
-              <!-- Campos CODMOTORISTA/PLACA removidos -->
-              <div class="card">
-                <label class="label" for="eanInput"
-                  ><i class="fas fa-qrcode"></i> Leitura do Scanner (EAN bruto)
-                  <span class="danger-text">*</span></label
-                >
-                <input
-                  id="eanInput"
-                  type="search"
-                  placeholder="Aponte o leitor e pressione Enter"
-                />
-                <small id="eanErr" class="danger-text hidden"
-                  >EAN inválido/incompleto ou não consta no cadastro.</small
-                >
-                <small id="planilhaWarn" class="danger-text hidden"
-                  >Baixe o cadastro na aba Configuração.</small
-                >
-              </div>
-            </div>
-
-            <div
-              class="row"
-              style="justify-content: space-between; margin: 16px 0 8px"
+            <input
+              id="codigoCarga"
+              type="text"
+              inputmode="numeric"
+              placeholder="Ex.: 2192459"
+            />
+          </div>
+          <!-- Campos CODMOTORISTA/PLACA removidos -->
+          <div class="card">
+            <label class="label" for="eanInput"
+              ><i class="fas fa-qrcode"></i> Leitura do Scanner (EAN bruto)
+              <span class="danger-text">*</span></label
             >
-              <div class="row">
-                <span class="pill"
-                  ><i class="fas fa-barcode"></i> Itens bipados:
-                  <b id="itensCount">0</b></span
-                >
-                <span class="pill"
-                  ><i class="fas fa-boxes"></i> Produtos carregados:
-                  <b id="prodCount">0</b></span
-                >
-                <span class="pill"
-                  ><i class="fas fa-calendar-alt"></i> Calendário OS:
-                  <b id="osBadge">—</b></span
-                >
-                <span class="pill"
-                  ><i class="fas fa-id-card"></i> CPF:
-                  <b id="cpfBadge">—</b></span
-                >
-                <span class="pill"
-                  ><i class="fas fa-file-excel"></i> Planilha ativa:
-                  <b id="planilhaBadge">—</b></span
-                >
-              </div>
-            </div>
-
-            <div class="table-wrap">
-              <table id="tabela">
-                <thead>
-                  <tr>
-                    <th>EAN</th>
-                    <th>DESCRICAO</th>
-                    <th class="right">QT bipado</th>
-                    <th class="right">QT planilha</th>
-                    <th class="right">Divergência</th>
-                  </tr>
-                </thead>
-                <tbody id="tbody"></tbody>
-              </table>
-            </div>
+            <input
+              id="eanInput"
+              type="search"
+              placeholder="Aponte o leitor e pressione Enter"
+            />
+            <small id="eanErr" class="danger-text hidden"
+              >EAN inválido/incompleto ou não consta no cadastro.</small
+            >
+            <small id="planilhaWarn" class="danger-text hidden"
+              >Baixe o cadastro na aba Configuração.</small
+            >
           </div>
-        </section>
+        </div>
 
-        <!-- CONFIGURAÇÃO -->
-        <section id="tab-config" class="content hidden">
-          <div class="grid grid-3">
-            <div class="card">
-              <label class="label" for="cpf"
-                ><i class="fas fa-id-card"></i> CPF (obrigatório)</label
-              >
-              <input
-                id="cpf"
-                type="text"
-                inputmode="numeric"
-                placeholder="000.000.000-00"
-                maxlength="14"
-              />
-              <small id="cpfErr" class="danger-text hidden"
-                >CPF inválido (11 dígitos).</small
-              >
-            </div>
-            <div class="card">
-              <label class="label" for="calendarioOs"
-                ><i class="fas fa-calendar-alt"></i> Calendário OS (Portal
-                LAMIS)</label
-              >
-              <div class="row">
-                <input
-                  id="calendarioOs"
-                  type="text"
-                  inputmode="numeric"
-                  placeholder="Ex.: 37348"
-                  style="flex: 1"
-                />
-                <button
-                  id="btnSalvarOS"
-                  class="btn primary"
-                  type="button"
-                  title="Salvar novo Calendário OS"
-                >
-                  <i class="fas fa-save"></i> Salvar
-                </button>
-              </div>
-            </div>
+        <div
+          class="row"
+          style="justify-content: space-between; margin: 16px 0 8px"
+        >
+          <div class="row">
+            <span class="pill"
+              ><i class="fas fa-barcode"></i> Itens bipados:
+              <b id="itensCount">0</b></span
+            >
+            <span class="pill"
+              ><i class="fas fa-boxes"></i> Produtos carregados:
+              <b id="prodCount">0</b></span
+            >
+            <span class="pill"
+              ><i class="fas fa-calendar-alt"></i> Calendário OS:
+              <b id="osBadge">—</b></span
+            >
+            <span class="pill"
+              ><i class="fas fa-id-card"></i> CPF:
+              <b id="cpfBadge">—</b></span
+            >
+            <span class="pill"
+              ><i class="fas fa-file-excel"></i> Planilha ativa:
+              <b id="planilhaBadge">—</b></span
+            >
           </div>
+        </div>
 
-          <div class="grid grid-2" style="margin-top: 16px">
-            <div class="card">
-              <label class="label"
-                ><i class="fas fa-file-excel"></i> Divergência (Bate
-                Carga)</label
-              >
-              <div class="row" style="margin-bottom: 8px">
-                <select
-                  id="codigoCargaCfgSel"
-                  title="Selecione o Nº da Carga"
-                  style="min-width: 220px"
-                >
-                  <option value="">Selecione o Nº da Carga</option>
-                </select>
-                <button
-                  id="btnBaixarPlanilhaSrv"
-                  class="btn primary"
-                  type="button"
-                >
-                  <i class="fas fa-download"></i> Baixar Divergência
-                </button>
-              </div>
-              <small class="muted"
-                >Status: <span id="loadStatus">Nenhuma planilha.</span></small
-              >
-            </div>
-
-            <div class="card">
-              <label class="label"
-                ><i class="fas a fa-boxes"></i> Cadastro Cliente</label
-              >
-              <div class="row">
-                <button
-                  id="btnCarregarProdutos"
-                  class="btn primary"
-                  type="button"
-                >
-                  <i class="fas fa-download"></i> Carregar Cadastro
-                </button>
-              </div>
-              <small class="muted"
-                >Status:
-                <span id="loadProdStatus"
-                  >Nenhum cadastro carregado.</span
-                ></small
-              >
-            </div>
-          </div>
-
-          <div class="grid grid-3" style="margin-top: 16px">
-            <div class="card">
-              <label class="label"
-                ><i class="fas fa-info-circle"></i> Resumo</label
-              >
-              <div class="row">
-                <span class="pill"
-                  ><i class="fas fa-boxes"></i> Produtos carregados:
-                  <b id="prodCount2">0</b></span
-                >
-                <span class="pill"
-                  ><i class="fas fa-id-card"></i> CPF:
-                  <b id="cpfBadge2">—</b></span
-                >
-                <span class="pill"
-                  ><i class="fas fa-calendar-alt"></i> Calendário OS:
-                  <b id="osBadge2">—</b></span
-                >
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- TRANSMISSÃO -->
-        <section id="tab-tx" class="content hidden">
-          <div id="lock-tx" class="hidden"></div>
-          <div id="tx-wrap">
-            <div class="grid grid-3">
-              <div class="card">
-                <div class="row" style="margin-top: 4px">
-                  <button id="btnTransmitir" class="btn primary" type="button">
-                    <i class="fas fa-paper-plane"></i> Enviar dados
-                  </button>
-                </div>
-              </div>
-              <div class="card">
-                <div class="label">
-                  <i class="fas fa-info-circle"></i> Resumo
-                </div>
-                <div class="row">
-                  <span class="pill"
-                    ><i class="fas fa-barcode"></i> Itens:
-                    <b id="txCount">0</b></span
-                  >
-                  <span class="pill"
-                    ><i class="fas fa-calendar-alt"></i> Calendário OS:
-                    <b id="txOs">—</b></span
-                  >
-                  <span class="pill"
-                    ><i class="fas fa-id-card"></i> CPF:
-                    <b id="txCpf">—</b></span
-                  >
-                </div>
-              </div>
-              <div class="card">
-                <div class="label"><i class="fas fa-reply"></i> Retorno</div>
-                <div
-                  id="retorno"
-                  style="
-                    background: #f8fafc;
-                    border: 1px solid var(--border);
-                    border-radius: 8px;
-                    padding: 12px;
-                    min-height: 84px;
-                    overflow: auto;
-                    font-size: 14px;
-                  "
-                >
-                  —
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <footer
-          class="content"
-          style="border-top: 1px solid var(--border); padding: 16px 24px"
-        ></footer>
+        <div class="table-wrap">
+          <table id="tabela">
+            <thead>
+              <tr>
+                <th>EAN</th>
+                <th>DESCRICAO</th>
+                <th class="right">QT bipado</th>
+                <th class="right">QT planilha</th>
+                <th class="right">Divergência</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
       </div>
+    </section>
+
+    <!-- CONFIGURAÇÃO -->
+    <section id="tab-config" class="content hidden">
+      <div class="grid grid-3">
+        <div class="card">
+          <label class="label" for="cpf"
+            ><i class="fas fa-id-card"></i> CPF (obrigatório)</label
+          >
+          <input
+            id="cpf"
+            type="text"
+            inputmode="numeric"
+            placeholder="000.000.000-00"
+            maxlength="14"
+          />
+          <small id="cpfErr" class="danger-text hidden"
+            >CPF inválido (11 dígitos).</small
+          >
+        </div>
+        <div class="card">
+          <label class="label" for="calendarioOs"
+            ><i class="fas fa-calendar-alt"></i> Calendário OS (Portal
+            LAMIS)</label
+          >
+          <div class="row">
+            <input
+              id="calendarioOs"
+              type="text"
+              inputmode="numeric"
+              placeholder="Ex.: 37348"
+              style="flex: 1"
+            />
+            <button
+              id="btnSalvarOS"
+              class="btn primary"
+              type="button"
+              title="Salvar novo Calendário OS"
+            >
+              <i class="fas fa-save"></i> Salvar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-2" style="margin-top: 16px">
+        <div class="card">
+          <label class="label"
+            ><i class="fas fa-file-excel"></i> Divergência (Bate
+            Carga)</label
+          >
+          <div class="row" style="margin-bottom: 8px">
+            <select
+              id="codigoCargaCfgSel"
+              title="Selecione o Nº da Carga"
+              style="min-width: 220px"
+            >
+              <option value="">Selecione o Nº da Carga</option>
+            </select>
+            <button
+              id="btnBaixarPlanilhaSrv"
+              class="btn primary"
+              type="button"
+            >
+              <i class="fas fa-download"></i> Baixar Divergência
+            </button>
+          </div>
+          <small class="muted"
+            >Status: <span id="loadStatus">Nenhuma planilha.</span></small
+          >
+        </div>
+
+        <div class="card">
+          <label class="label"
+            ><i class="fas a fa-boxes"></i> Cadastro Cliente</label
+          >
+          <div class="row">
+            <button
+              id="btnCarregarProdutos"
+              class="btn primary"
+              type="button"
+            >
+              <i class="fas fa-download"></i> Carregar Cadastro
+            </button>
+          </div>
+          <small class="muted"
+            >Status:
+            <span id="loadProdStatus"
+              >Nenhum cadastro carregado.</span
+            ></small
+          >
+        </div>
+      </div>
+
+      <div class="grid grid-3" style="margin-top: 16px">
+        <div class="card">
+          <label class="label"
+            ><i class="fas fa-info-circle"></i> Resumo</label
+          >
+          <div class="row">
+            <span class="pill"
+              ><i class="fas fa-boxes"></i> Produtos carregados:
+              <b id="prodCount2">0</b></span
+            >
+            <span class="pill"
+              ><i class="fas fa-id-card"></i> CPF:
+              <b id="cpfBadge2">—</b></span
+            >
+            <span class="pill"
+              ><i class="fas fa-calendar-alt"></i> Calendário OS:
+              <b id="osBadge2">—</b></span
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRANSMISSÃO -->
+    <section id="tab-tx" class="content hidden">
+      <div id="lock-tx" class="hidden"></div>
+      <div id="tx-wrap">
+        <div class="grid grid-3">
+          <div class="card">
+            <div class="row" style="margin-top: 4px">
+              <button id="btnTransmitir" class="btn primary" type="button">
+                <i class="fas fa-paper-plane"></i> Enviar dados
+              </button>
+              <!-- NOVO BOTÃO: Continuar de onde parei -->
+              <button id="btnContinuar" class="btn" type="button" title="Continuar de onde parei">
+                <i class="fas fa-play"></i> Continuar de onde parei
+              </button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="label">
+              <i class="fas fa-info-circle"></i> Resumo
+            </div>
+            <div class="row">
+              <span class="pill"
+                ><i class="fas fa-barcode"></i> Itens:
+                <b id="txCount">0</b></span
+              >
+              <span class="pill"
+                ><i class="fas fa-calendar-alt"></i> Calendário OS:
+                <b id="txOs">—</b></span
+              >
+              <span class="pill"
+                ><i class="fas fa-id-card"></i> CPF:
+                <b id="txCpf">—</b></span
+              >
+            </div>
+          </div>
+          <div class="card">
+            <div class="label"><i class="fas fa-reply"></i> Retorno</div>
+            <div
+              id="retorno"
+              style="
+                background: #f8fafc;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 12px;
+                min-height: 84px;
+                overflow: auto;
+                font-size: 14px;
+              "
+            >
+              —
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer
+      class="content"
+      style="border-top: 1px solid var(--border); padding: 16px 24px"
+    ></footer>
+  </div>
+</div>
+
+<!-- Modal quantidade para EAN-13 -->
+<div id="qtyModal" class="modal hidden">
+  <div class="modal-box">
+    <div class="label"><i class="fas fa-calculator"></i> Quantidade (EAN-13)</div>
+    <input id="qtyInput" type="text" inputmode="decimal" placeholder="Ex.: 1,00" />
+    <small id="qtyErr" class="danger-text hidden">Informe uma quantidade válida.</small>
+    <div class="row" style="justify-content: flex-end; margin-top: 12px">
+      <button id="qtyCancel" class="btn" type="button">Cancelar</button>
+      <button id="qtyOk" class="btn primary" type="button">OK</button>
     </div>
+  </div>
+</div>
 
-    <!-- Polyfills ES5/Android 6 -->
-    <script src="https://cdn.jsdelivr.net/npm/core-js-bundle@3/minified.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/regenerator-runtime@0.14.1/runtime.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@3.6.20/dist/fetch.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@ungap/url-search-params@0.2.2/min.js"></script>
+<!-- Polyfills ES5/Android 6 -->
+<script src="https://cdn.jsdelivr.net/npm/core-js-bundle@3/minified.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/regenerator-runtime@0.14.1/runtime.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@3.6.20/dist/fetch.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@ungap/url-search-params@0.2.2/min.js"></script>
 
-    <script>
-      /* ===================== CARGA GARANTIDA — JS ES5 (Android 6) ===================== */
-      /* 100% ES5: sem let/const, arrow, template string, closest(), etc.               */
-      /* ================================================================================= */
+<script>
+  /* ===================== CARGA GARANTIDA — JS ES5 (Android 6) ===================== */
+  /* 100% ES5: sem let/const, arrow, template string, closest(), etc.               */
+  /* ================================================================================= */
 
-      /* ====== ENDPOINTS / LOCALSTORAGE KEYS ====== */
-      var BASE_URL = "https://portal.lamisbrasil.com.br/portal/bipados/salvar";
-      var PLANILHA_URL =
-        "https://portal.lamisbrasil.com.br/portal/download/planilha";
+  /* ====== ENDPOINTS / LOCALSTORAGE KEYS ====== */
+  var BASE_URL = "https://portal.lamisbrasil.com.br/portal/bipados/salvar";
+  var PLANILHA_URL =
+    "https://portal.lamisbrasil.com.br/portal/download/planilha";
+  /* NOVO: endpoint para continuar */
+  var CONTINUAR_URL =
+    "https://portal.lamisbrasil.com.br/portal/bipados/continuar";
 
-      var LS_KEYS = {
-        cpf: "batecarga.cpf",
-        os: "batecarga.calendario_os",
-        itens: "batecarga.itens",
-        produtos: "batecarga.produtos",
-        lastPlanilhaBlob: "batecarga.planilha.blob64",
-        carga_cfg: "batecarga.codigo_carga_cfg",
+  var LS_KEYS = {
+    cpf: "batecarga.cpf",
+    os: "batecarga.calendario_os",
+    itens: "batecarga.itens",
+    produtos: "batecarga.produtos",
+    lastPlanilhaBlob: "batecarga.planilha.blob64",
+    carga_cfg: "batecarga.codigo_carga_cfg",
+  };
+
+  /* ====== HELPERS ====== */
+  function $(q, r) {
+    return (r || document).querySelector(q);
+  }
+  function $$(q, r) {
+    return Array.prototype.slice.call((r || document).querySelectorAll(q));
+  }
+  function onlyDigits(s) {
+    return String(s || "").replace(/\D+/g, "");
+  }
+  function leftPad(s, l) {
+    s = String(s || "");
+    while (s.length < l) s = "0" + s;
+    return s;
+  }
+  function formatPt2(n) {
+    if (n == null || !isFinite(n)) return "";
+    var v = Math.round((n + Number.EPSILON) * 100) / 100;
+    return v.toFixed(2).replace(".", ",");
+  }
+  function formatPtAuto(n) {
+    if (n == null || !isFinite(n)) return "";
+    var s = String(Math.round((n + Number.EPSILON) * 1000000) / 1000000);
+    if (s.indexOf(".") > -1) {
+      while (s.slice(-1) === "0") s = s.slice(0, -1);
+      if (s.slice(-1) === ".") s = s.slice(0, -1);
+    }
+    return s.replace(".", ",");
+  }
+  function maskCPF(v) {
+    var s = onlyDigits(v).slice(0, 11);
+    return s.replace(
+      /(\d{3})(\d{3})(\d{3})(\d{0,2}).*/ ,
+      function (_, a, b, c, d) {
+        return d
+          ? a + "." + b + "." + c + "-" + d
+          : c
+          ? a + "." + b + "." + c
+          : b
+          ? a + "." + b
+          : a;
+      }
+    );
+  }
+  function isValidCPF(s) {
+    var c = onlyDigits(s);
+    if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return false;
+    function dv(n) {
+      var su = 0,
+        f = n.length + 1,
+        i;
+      for (i = 0; i < n.length; i++) {
+        su += Number(n[i]) * f;
+        f--;
+      }
+      var m = su % 11;
+      return m < 2 ? 0 : 11 - m;
+    }
+    return (
+      dv(c.slice(0, 9)) === Number(c[9]) &&
+      dv(c.slice(0, 10)) === Number(c[10])
+    );
+  }
+  function nowClock() {
+    var d = new Date(),
+      p = function (n) {
+        n = String(n);
+        return n.length < 2 ? "0" + n : n;
       };
+    return (
+      p(d.getDate()) +
+      "/" +
+      p(d.getMonth() + 1) +
+      "/" +
+      d.getFullYear() +
+      " " +
+      p(d.getHours()) +
+      ":" +
+      p(d.getMinutes()) +
+      ":" +
+      p(d.getSeconds())
+    );
+  }
+  function onId(id, ev, fn) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener(ev, fn);
+  }
 
-      /* ====== HELPERS ====== */
-      function $(q, r) {
-        return (r || document).querySelector(q);
+  /* ===== XLSX loader (fallbacks) ===== */
+  (function () {
+    function ensureXLSX(cb) {
+      if (window.XLSX) {
+        cb();
+        return;
       }
-      function $$(q, r) {
-        return Array.prototype.slice.call((r || document).querySelectorAll(q));
-      }
-      function onlyDigits(s) {
-        return String(s || "").replace(/\D+/g, "");
-      }
-      function leftPad(s, l) {
-        s = String(s || "");
-        while (s.length < l) s = "0" + s;
-        return s;
-      }
-      function formatPt2(n) {
-        if (n == null || !isFinite(n)) return "";
-        var v = Math.round((n + Number.EPSILON) * 100) / 100;
-        return v.toFixed(2).replace(".", ",");
-      }
-      function formatPtAuto(n) {
-        if (n == null || !isFinite(n)) return "";
-        var s = String(Math.round((n + Number.EPSILON) * 1000000) / 1000000);
-        if (s.indexOf(".") > -1) {
-          while (s.slice(-1) === "0") s = s.slice(0, -1);
-          if (s.slice(-1) === ".") s = s.slice(0, -1);
+      var srcs = [
+          "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.core.min.js",
+          "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.core.min.js",
+          "https://unpkg.com/xlsx@0.18.5/dist/xlsx.core.min.js",
+        ],
+        i = 0;
+      (function next() {
+        if (window.XLSX) {
+          cb();
+          return;
         }
-        return s.replace(".", ",");
-      }
-      function maskCPF(v) {
-        var s = onlyDigits(v).slice(0, 11);
-        return s.replace(
-          /(\d{3})(\d{3})(\d{3})(\d{0,2}).*/,
-          function (_, a, b, c, d) {
-            return d
-              ? a + "." + b + "." + c + "-" + d
-              : c
-              ? a + "." + b + "." + c
-              : b
-              ? a + "." + b
-              : a;
-          }
-        );
-      }
-      function isValidCPF(s) {
-        var c = onlyDigits(s);
-        if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return false;
-        function dv(n) {
-          var su = 0,
-            f = n.length + 1,
-            i;
-          for (i = 0; i < n.length; i++) {
-            su += Number(n[i]) * f;
-            f--;
-          }
-          var m = su % 11;
-          return m < 2 ? 0 : 11 - m;
+        if (i >= srcs.length) {
+          cb(new Error("XLSX indisponível"));
+          return;
         }
-        return (
-          dv(c.slice(0, 9)) === Number(c[9]) &&
-          dv(c.slice(0, 10)) === Number(c[10])
-        );
-      }
-      function nowClock() {
-        var d = new Date(),
-          p = function (n) {
-            n = String(n);
-            return n.length < 2 ? "0" + n : n;
-          };
-        return (
-          p(d.getDate()) +
-          "/" +
-          p(d.getMonth() + 1) +
-          "/" +
-          d.getFullYear() +
-          " " +
-          p(d.getHours()) +
-          ":" +
-          p(d.getMinutes()) +
-          ":" +
-          p(d.getSeconds())
-        );
-      }
-      function onId(id, ev, fn) {
-        var el = document.getElementById(id);
-        if (el) el.addEventListener(ev, fn);
-      }
-
-      /* ===== XLSX loader (fallbacks) ===== */
-      (function () {
-        function ensureXLSX(cb) {
-          if (window.XLSX) {
-            cb();
-            return;
-          }
-          var srcs = [
-              "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.core.min.js",
-              "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.core.min.js",
-              "https://unpkg.com/xlsx@0.18.5/dist/xlsx.core.min.js",
-            ],
-            i = 0;
-          (function next() {
-            if (window.XLSX) {
-              cb();
-              return;
-            }
-            if (i >= srcs.length) {
-              cb(new Error("XLSX indisponível"));
-              return;
-            }
-            var s = document.createElement("script");
-            s.src = srcs[i++];
-            s.onload = function () {
-              setTimeout(next, 0);
-            };
-            s.onerror = next;
-            document.head.appendChild(s);
-          })();
-        }
-        window.ensureXLSX = ensureXLSX;
+        var s = document.createElement("script");
+        s.src = srcs[i++];
+        s.onload = function () {
+          setTimeout(next, 0);
+        };
+        s.onerror = next;
+        document.head.appendChild(s);
       })();
+    }
+    window.ensureXLSX = ensureXLSX;
+  })();
 
-      /* ===== Parse número PT-BR flexível (16,31 -> 16.31) ===== */
-      function parseFlexNumber(str) {
-        var s = String(str == null ? "" : str).trim();
-        if (!s) return 0;
-        s = s.replace(/\s+/g, "");
-        var hasC = s.indexOf(",") > -1,
-          hasD = s.indexOf(".") > -1;
-        if (hasC && hasD) {
-          var lc = s.lastIndexOf(","),
-            ld = s.lastIndexOf(".");
-          if (lc > ld) {
-            s = s.replace(/\./g, "").replace(",", ".");
-          } else {
-            s = s.replace(/,/g, "");
-          }
-        } else if (hasC) {
-          s = s.replace(",", ".");
-        }
-        var n = Number(s);
-        return isFinite(n) ? n : 0;
+  /* ===== Parse número PT-BR flexível (16,31 -> 16.31) ===== */
+  function parseFlexNumber(str) {
+    var s = String(str == null ? "" : str).trim();
+    if (!s) return 0;
+    s = s.replace(/\s+/g, "");
+    var hasC = s.indexOf(",") > -1,
+      hasD = s.indexOf(".") > -1;
+    if (hasC && hasD) {
+      var lc = s.lastIndexOf(","),
+        ld = s.lastIndexOf(".");
+      if (lc > ld) {
+        s = s.replace(/\./g, "").replace(",", ".");
+      } else {
+        s = s.replace(/,/g, "");
       }
+    } else if (hasC) {
+      s = s.replace(",", ".");
+    }
+    var n = Number(s);
+    return isFinite(n) ? n : 0;
+  }
 
-      /* ===== Estado ===== */
-      var state = {
-        cpf: "",
-        calendarioOS: "",
-        codigoCargaCfg: "",
-        itens: [], // bipados
-        produtosMap: new Map(), // GTIN14 -> [produtos]
-        produtosCount: 0,
-        planilhaByCarga: new Map(), // NUMCAR -> rows[]
-        planAggByCarga: new Map(), // NUMCAR -> Map(GTIN14->agg)
-      };
-      function loadState() {
-        try {
-          state.cpf = localStorage.getItem(LS_KEYS.cpf) || "";
-          state.calendarioOS = localStorage.getItem(LS_KEYS.os) || "";
-          state.codigoCargaCfg = localStorage.getItem(LS_KEYS.carga_cfg) || "";
-          var raw = localStorage.getItem(LS_KEYS.itens);
-          state.itens = raw ? JSON.parse(raw) : [];
-          var prod = localStorage.getItem(LS_KEYS.produtos);
-          if (prod) {
-            var arr = JSON.parse(prod),
-              map = new Map(),
-              i,
-              o,
-              e,
-              gt;
-            for (i = 0; i < arr.length; i++) {
-              o = arr[i];
-              e = onlyDigits(o.EAN || o.ean || "");
-              if (!e) continue;
-              gt = leftPad(e, 14);
-              o.EAN = gt;
-              if (!map.has(gt)) map.set(gt, [o]);
-              else map.get(gt).push(o);
-            }
-            state.produtosMap = map;
-            state.produtosCount = 0;
-            map.forEach(function (list) {
-              state.produtosCount += list.length;
-            });
-          }
-        } catch (e) {}
-      }
-      function saveItens() {
-        localStorage.setItem(LS_KEYS.itens, JSON.stringify(state.itens));
-      }
-      function saveProdutosFromMap() {
-        var arr = [];
-        state.produtosMap.forEach(function (list) {
-          for (var i = 0; i < list.length; i++) arr.push(list[i]);
-        });
-        localStorage.setItem(LS_KEYS.produtos, JSON.stringify(arr));
-      }
-
-      /* ===== UI / Tabs ===== */
-      var tabs = {
-        leitura: $("#tab-leitura"),
-        config: $("#tab-config"),
-        tx: $("#tab-tx"),
-      };
-      $$(".tab-btn").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          var t = btn.getAttribute("data-tab");
-          $$(".tab-btn").forEach(function (b) {
-            b.setAttribute("aria-selected", String(b === btn));
-          });
-          for (var k in tabs) {
-            tabs[k].classList.toggle("hidden", k !== t);
-          }
-          if (t === "leitura") {
-            var inp = $("#eanInput");
-            if (inp) inp.focus();
-          }
-          refreshBadges();
-          refreshTx();
-          if (t === "leitura") renderMergedTable();
-        });
-      });
-      function isLocked() {
-        return !isValidCPF(state.cpf);
-      }
-      function applyLocks() {
-        var locked = isLocked();
-        $("#lock-leitura").className = locked ? "overlay" : "hidden";
-        $("#lock-tx").className = locked ? "overlay" : "hidden";
-        $("#leitura-wrap").style.filter = locked
-          ? "blur(.5px) opacity(.6)"
-          : "none";
-        $("#tx-wrap").style.filter = locked ? "blur(.5px) opacity(.6)" : "none";
-      }
-      function refreshBadges() {
-        $("#osBadge").textContent = state.calendarioOS || "—";
-        if ($("#osBadge2"))
-          $("#osBadge2").textContent = state.calendarioOS || "—";
-        $("#cpfBadge").textContent = state.cpf ? maskCPF(state.cpf) : "—";
-        if ($("#cpfBadge2"))
-          $("#cpfBadge2").textContent = state.cpf ? maskCPF(state.cpf) : "—";
-        $("#txOs").textContent = state.calendarioOS || "—";
-        $("#txCpf").textContent = state.cpf ? maskCPF(state.cpf) : "—";
-        $("#prodCount").textContent = String(state.produtosCount);
-        if ($("#prodCount2"))
-          $("#prodCount2").textContent = String(state.produtosCount);
-        $("#itensCount").textContent = String(state.itens.length);
-        $("#txCount").textContent = String(state.itens.length);
-        $("#calendarioOs").value = state.calendarioOS;
-        $("#cpf").value = maskCPF(state.cpf);
-        $("#planilhaBadge").textContent = state.planilhaByCarga.size
-          ? "Carregada"
-          : "—";
-        refreshCargaSelect();
-      }
-
-      /* ===== XLSX helpers ===== */
-      function normalizeHeader(s) {
-        return String(s || "")
-          .trim()
-          .toUpperCase();
-      }
-      function sheetToObjs(ws) {
-        var rows = XLSX.utils.sheet_to_json(ws, { defval: "", raw: false });
-        return rows.map(function (r) {
-          var o = {},
-            k;
-          for (k in r) {
-            o[normalizeHeader(k)] = r[k];
-          }
-          return o;
-        });
-      }
-
-      /* ===== Cadastro Cliente (produtos) ===== */
-      function ingestProdutosFromBuffer(buf, statusEl) {
-        ensureXLSX(function (err) {
-          if (err) {
-            if (statusEl) statusEl.textContent = "Erro: XLSX indisponível";
-            return;
-          }
-          try {
-            var wb = XLSX.read(new Uint8Array(buf), { type: "array" }),
-              ws = wb.Sheets[wb.SheetNames[0]];
-            var objs = sheetToObjs(ws),
-              map = new Map(),
-              total = 0,
-              erros = 0,
-              i,
-              row,
-              eanRaw,
-              eanDigits,
-              gtin14,
-              obj;
-            for (i = 0; i < objs.length; i++) {
-              row = objs[i];
-              eanRaw = String(row.EAN || row.ean || row.Ean || "");
-              eanDigits = onlyDigits(eanRaw);
-              if (!eanDigits) {
-                erros++;
-                continue;
-              }
-              gtin14 = leftPad(eanDigits, 14);
-              obj = {
-                EAN: gtin14,
-                CODPROD: row.CODPROD || "",
-                DESCRICAO: row.DESCRICAO || "",
-                QT: row.QT || "",
-                CUSTOREAL: row.CUSTOREAL || "",
-                CODFILIAL: row.CODFILIAL || "",
-                CODMOTORISTA: row.CODMOTORISTA || "",
-                CODENDERECO: String(row.CODENDERECO || "").trim(),
-              };
-              if (!map.has(gtin14)) map.set(gtin14, [obj]);
-              else map.get(gtin14).push(obj);
-              total++;
-            }
-            state.produtosMap = map;
-            state.produtosCount = total;
-            saveProdutosFromMap();
-            if (statusEl)
-              statusEl.textContent =
-                "Cadastro carregado: " +
-                total +
-                " linhas / " +
-                map.size +
-                " GTIN(s)" +
-                (erros ? " (" + erros + " sem EAN)." : "");
-          } catch (ex) {
-            if (statusEl)
-              statusEl.textContent = "Erro ao ler cadastro: " + ex.message;
-          }
-        });
-      }
-
-      /* ===== Planilha Divergência ===== */
-      function ingestConferenciaFromBuffer(buf, cb) {
-        ensureXLSX(function (err) {
-          var ls = $("#loadStatus");
-          if (err) {
-            if (ls) ls.textContent = "Erro: XLSX indisponível";
-            if (typeof cb === "function") cb(err);
-            return;
-          }
-          try {
-            var wb = XLSX.read(new Uint8Array(buf), { type: "array" }),
-              ws = wb.Sheets[wb.SheetNames[0]];
-            var objs = sheetToObjs(ws),
-              byCarga = new Map(),
-              i,
-              r,
-              numcar;
-            for (i = 0; i < objs.length; i++) {
-              r = objs[i];
-              numcar = String(r.NUMCAR || "").trim();
-              if (!numcar) continue;
-              if (!byCarga.has(numcar)) byCarga.set(numcar, []);
-              byCarga.get(numcar).push(r);
-            }
-            state.planilhaByCarga = byCarga;
-            var aggByCarga = new Map();
-            byCarga.forEach(function (rows, numcar2) {
-              aggByCarga.set(numcar2, buildPlanAggForCarga(rows));
-            });
-            state.planAggByCarga = aggByCarga;
-            if (ls)
-              ls.textContent =
-                "Planilha carregada: " + byCarga.size + " carga(s).";
-            $("#planilhaBadge").textContent = byCarga.size ? "Carregada" : "—";
-            renderMergedTable();
-            if (typeof cb === "function") cb(null);
-          } catch (ex) {
-            if (ls) ls.textContent = "Erro ao ler planilha: " + ex.message;
-            if (typeof cb === "function") cb(ex);
-          }
-        });
-      }
-      function buildPlanAggForCarga(rows) {
-        var m = new Map(),
-          i;
-        for (i = 0; i < rows.length; i++) {
-          var r = rows[i],
-            eanRaw = String(r.CODAUXILIAR || "").trim(),
-            eanDigits = onlyDigits(eanRaw);
-          if (!eanDigits) continue;
-          var gtin = leftPad(eanDigits, 14),
-            descr = String(r.DESCRICAO || "").trim(),
-            qtTxt = String(r.QT || "").trim(),
-            qtNum = parseFlexNumber(qtTxt),
-            vlTotal = parseFlexNumber(String(r.VLTOTAL || "").trim());
-          if (!m.has(gtin))
-            m.set(gtin, {
-              qt_num: 0,
-              qt_disp: "",
-              vltotal: 0,
-              descricao: descr,
-            });
-          var o = m.get(gtin);
-          o.qt_num += isFinite(qtNum) ? qtNum : 0;
-          o.vltotal += isFinite(vlTotal) ? vlTotal : 0;
-          if (!o.descricao && descr) o.descricao = descr;
-        }
-        m.forEach(function (o) {
-          o.qt_disp = formatPt2(o.qt_num);
-        });
-        return m;
-      }
-
-      /* ===== Agregação bipados ===== */
-      function getBipAggForCarga(codCarga) {
-        var m = new Map(),
+  /* ===== Estado ===== */
+  var state = {
+    cpf: "",
+    calendarioOS: "",
+    codigoCargaCfg: "",
+    itens: [], // bipados
+    produtosMap: new Map(), // GTIN14 -> [produtos]
+    produtosCount: 0,
+    planilhaByCarga: new Map(), // NUMCAR -> rows[]
+    planAggByCarga: new Map(), // NUMCAR -> Map(GTIN14->agg)
+  };
+  function loadState() {
+    try {
+      state.cpf = localStorage.getItem(LS_KEYS.cpf) || "";
+      state.calendarioOS = localStorage.getItem(LS_KEYS.os) || "";
+      state.codigoCargaCfg = localStorage.getItem(LS_KEYS.carga_cfg) || "";
+      var raw = localStorage.getItem(LS_KEYS.itens);
+      state.itens = raw ? JSON.parse(raw) : [];
+      var prod = localStorage.getItem(LS_KEYS.produtos);
+      if (prod) {
+        var arr = JSON.parse(prod),
+          map = new Map(),
           i,
-          it,
-          gtin,
-          descr,
-          qtNum,
-          custo,
-          o;
-        for (i = 0; i < state.itens.length; i++) {
-          it = state.itens[i];
-          if (String(it.CODCARGA || "").trim() !== codCarga) continue;
-          gtin = leftPad(onlyDigits(it.EAN || ""), 14);
-          descr = String(it.DESCRICAO || "").trim();
-          qtNum = parseFlexNumber(String(it.QT == null ? "" : it.QT));
-          custo = parseFlexNumber(
-            String(it.CUSTOREAL == null ? "" : it.CUSTOREAL)
-          );
-          if (!m.has(gtin))
-            m.set(gtin, { qt_num: 0, custoreal: 0, descricao: descr });
-          o = m.get(gtin);
-          o.qt_num += isFinite(qtNum) ? qtNum : 0;
-          o.custoreal += isFinite(custo) ? custo : 0;
-          if (!o.descricao && descr) o.descricao = descr;
+          o,
+          e,
+          gt;
+        for (i = 0; i < arr.length; i++) {
+          o = arr[i];
+          e = onlyDigits(o.EAN || o.ean || "");
+          if (!e) continue;
+          gt = leftPad(e, 14);
+          o.EAN = gt;
+          if (!map.has(gt)) map.set(gt, [o]);
+          else map.get(gt).push(o);
         }
-        return m;
-      }
-      function getCurrentCarga() {
-        return String(
-          ($("#codigoCarga") && $("#codigoCarga").value) || ""
-        ).trim();
-      }
-
-      /* ===== Comparação ===== */
-      function getComparisonForCarga(codCarga) {
-        var planAgg = state.planAggByCarga.get(codCarga) || new Map(),
-          bipAgg = getBipAggForCarga(codCarga),
-          allKeys = [],
-          itens = [],
-          tot_bip = 0,
-          tot_plan = 0,
-          tot_custo_bip = 0,
-          tot_vltotal_plan = 0;
-        planAgg.forEach(function (_, k) {
-          allKeys.push(k);
-        });
-        bipAgg.forEach(function (_, k) {
-          if (allKeys.indexOf(k) === -1) allKeys.push(k);
-        });
-        var i, gtin, p, b, qtP_num, qtB_num, dQT;
-        for (i = 0; i < allKeys.length; i++) {
-          gtin = allKeys[i];
-          p = planAgg.get(gtin);
-          b = bipAgg.get(gtin);
-          qtP_num = p ? p.qt_num : 0;
-          qtB_num = b ? b.qt_num : 0;
-          dQT = qtB_num - qtP_num;
-          tot_bip += qtB_num;
-          tot_plan += qtP_num;
-          tot_custo_bip += b ? b.custoreal : 0;
-          tot_vltotal_plan += p ? p.vltotal : 0;
-          itens.push({
-            EAN: gtin,
-            DESCRICAO: (b && b.descricao) || (p && p.descricao) || "",
-            qt_bip_num: qtB_num,
-            qt_plan_num: qtP_num,
-            qt_plan_disp: p ? p.qt_disp : "",
-            delta_qt_num: dQT,
-            so_bipado: !!b && !p,
-            so_planilha: !!p && !b,
-          });
-        }
-        itens.sort(function (a, b2) {
-          return Math.abs(b2.delta_qt_num) - Math.abs(a.delta_qt_num);
-        });
-        var divergente = false,
-          j;
-        for (j = 0; j < itens.length; j++) {
-          if (Math.abs(itens[j].delta_qt_num) > 1e-9) {
-            divergente = true;
-            break;
-          }
-        }
-        return {
-          carga: codCarga,
-          itens: itens,
-          totais: {
-            qt_bipado: tot_bip,
-            qt_planilha: tot_plan,
-            delta_qt: tot_bip - tot_plan,
-            custo_bipado: tot_custo_bip,
-            vltotal_planilha: tot_vltotal_plan,
-          },
-          divergente: divergente,
-        };
-      }
-
-      /* ===== Util EXPANSÃO ===== */
-      function nextElementSiblingEl(el) {
-        var n = el.nextSibling;
-        while (n && n.nodeType !== 1) n = n.nextSibling;
-        return n;
-      }
-      function hasClass(el, cls) {
-        return (" " + el.className + " ").indexOf(" " + cls + " ") > -1;
-      }
-      function toggleClass(el, cls, force) {
-        var cur = " " + el.className + " ";
-        if (force === true) {
-          if (cur.indexOf(" " + cls + " ") === -1)
-            el.className = (cur + cls).trim();
-          return;
-        }
-        if (force === false) {
-          if (cur.indexOf(" " + cls + " ") > -1)
-            el.className = cur.replace(" " + cls + " ", " ").trim();
-          return;
-        }
-        if (cur.indexOf(" " + cls + " ") > -1)
-          el.className = cur.replace(" " + cls + " ", " ").trim();
-        else el.className = (cur + cls).trim();
-      }
-
-      /* ===== Render tabela + expansão ===== */
-      function makeExpandRow(gtin, codCarga) {
-        var tr = document.createElement("tr");
-        tr.className = "expand-row hidden";
-        tr.setAttribute("data-gtin", gtin);
-        tr.setAttribute("data-carga", codCarga);
-        var td = document.createElement("td");
-        td.colSpan = 5;
-        var html = [];
-        html.push(
-          '<div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px">'
-        );
-        html.push(
-          '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px"><span class="pill"><b>EAN:</b> ' +
-            gtin +
-            '</span><span class="pill"><b>Nº da Carga:</b> ' +
-            codCarga +
-            "</span></div>"
-        );
-        html.push(
-          '<div style="display:grid;gap:8px"><div class="muted">Bipados (linhas somadas):</div>'
-        );
-        html.push(
-          '<table style="width:100%;border-collapse:separate;border-spacing:0">'
-        );
-        html.push(
-          '<thead><tr><th style="text-align:left;padding:6px 8px">TS</th><th style="text-align:left;padding:6px 8px">Descrição</th><th style="text-align:right;padding:6px 8px">QT</th><th style="text-align:center;padding:6px 8px">Ações</th></tr></thead><tbody>'
-        );
-        var i, it;
-        for (i = 0; i < state.itens.length; i++) {
-          it = state.itens[i];
-          if (String(it.CODCARGA || "").trim() !== codCarga) continue;
-          if (leftPad(onlyDigits(it.EAN || ""), 14) !== gtin) continue;
-          html.push(
-            "<tr>" +
-              '<td style="padding:6px 8px">' +
-              (it.ts || "-") +
-              "</td>" +
-              '<td style="padding:6px 8px">' +
-              (it.DESCRICAO || "-") +
-              "</td>" +
-              '<td style="padding:6px 8px;text-align:right">' +
-              formatPtAuto(parseFlexNumber(it.QT)) +
-              "</td>" +
-              '<td style="padding:6px 8px;text-align:center"><button type="button" class="btn" title="Excluir bipagem" data-del="1" data-ts="' +
-              (it.ts || "") +
-              '" data-carga="' +
-              codCarga +
-              '" data-gtin="' +
-              gtin +
-              '"><i class="fas fa-trash"></i></button></td>' +
-              "</tr>"
-          );
-        }
-        html.push("</tbody></table>");
-        html.push(
-          '<div class="muted" style="margin-top:8px">Planilha (linhas somadas):</div>'
-        );
-        html.push(
-          '<table style="width:100%;border-collapse:separate;border-spacing:0"><thead><tr><th style="text-align:left;padding:6px 8px">DESCRIÇÃO</th><th style="text-align:right;padding:6px 8px">QT</th></tr></thead><tbody>'
-        );
-        var rows = state.planilhaByCarga.get(codCarga) || [],
-          j,
-          r,
-          eanRaw,
-          qtTxt;
-        for (j = 0; j < rows.length; j++) {
-          r = rows[j];
-          eanRaw = onlyDigits(String(r.CODAUXILIAR || ""));
-          if (leftPad(eanRaw, 14) !== gtin) continue;
-          qtTxt = String(r.QT || "");
-          html.push(
-            '<tr><td style="padding:6px 8px">' +
-              (r.DESCRICAO || "-") +
-              '</td><td style="padding:6px 8px;text-align:right">' +
-              qtTxt +
-              "</td></tr>"
-          );
-        }
-        html.push("</tbody></table></div></div>");
-        td.innerHTML = html.join("");
-        tr.appendChild(td);
-        return tr;
-      }
-      function renderMergedTable() {
-        var tbody = $("#tbody");
-        tbody.innerHTML = "";
-        var codCarga = getCurrentCarga();
-        if (!codCarga) {
-          var tr0 = document.createElement("tr");
-          tr0.innerHTML =
-            '<td colspan="5" class="muted">Informe/bipe um <b>Nº da Carga</b> para exibir os itens.</td>';
-          tbody.appendChild(tr0);
-          return;
-        }
-        var planAgg = state.planAggByCarga.get(codCarga) || new Map(),
-          bipAgg = getBipAggForCarga(codCarga),
-          cmp = getComparisonForCarga(codCarga),
-          badgeHost = $("#planilhaBadge");
-        if (badgeHost) {
-          var hasPlan = state.planilhaByCarga.has(codCarga);
-          badgeHost.textContent = hasPlan
-            ? cmp.divergente
-              ? "Divergente"
-              : "OK"
-            : "—";
-          badgeHost.className =
-            "pill " + (hasPlan ? (cmp.divergente ? "bad" : "") : "");
-        }
-        var totB = 0,
-          totP = 0,
-          planKeys = [];
-        planAgg.forEach(function (_, key) {
-          planKeys.push(key);
-        });
-        planKeys.sort();
-        if (planKeys.length === 0) {
-          var tr1 = document.createElement("tr");
-          tr1.innerHTML =
-            '<td colspan="5" class="muted">Nenhuma linha na planilha para o NUMCAR <b>' +
-            codCarga +
-            "</b>.</td>";
-          tbody.appendChild(tr1);
-        } else {
-          var idx,
-            gt,
-            p,
-            b,
-            qtP,
-            qtB,
-            d,
-            desc,
-            bad,
-            bipDisp,
-            planDisp,
-            deltaDisp,
-            tr,
-            exp;
-          for (idx = 0; idx < planKeys.length; idx++) {
-            gt = planKeys[idx];
-            p = planAgg.get(gt);
-            b = bipAgg.get(gt);
-            qtP = p ? p.qt_num : 0;
-            qtB = b ? b.qt_num : 0;
-            d = qtB - qtP;
-            desc = (b && b.descricao) || (p && p.descricao) || "—";
-            bad = Math.abs(d) > 1e-9;
-            bipDisp = formatPtAuto(qtB);
-            planDisp = p ? p.qt_disp : "";
-            deltaDisp = formatPt2(d);
-            totB += qtB;
-            totP += qtP;
-            tr = document.createElement("tr");
-            tr.setAttribute("data-gtin", gt);
-            tr.setAttribute("data-carga", codCarga);
-            tr.innerHTML =
-              '<td><button type="button" class="btn" data-expand="' +
-              gt +
-              '" title="Expandir" style="padding:2px 8px;margin-right:6px"><i class="fas fa-plus"></i></button>' +
-              gt +
-              "</td>" +
-              "<td>" +
-              desc +
-              "</td>" +
-              '<td class="right ' +
-              (bad ? "bad" : "") +
-              '">' +
-              bipDisp +
-              "</td>" +
-              '<td class="right ' +
-              (bad ? "bad" : "") +
-              '">' +
-              planDisp +
-              "</td>" +
-              '<td class="right ' +
-              (bad ? "bad" : "") +
-              '">' +
-              deltaDisp +
-              "</td>";
-            exp = makeExpandRow(gt, codCarga);
-            tbody.appendChild(tr);
-            tbody.appendChild(exp);
-          }
-        }
-        var bipOnly = [];
-        bipAgg.forEach(function (_, key) {
-          if (!planAgg.has(key)) bipOnly.push(key);
-        });
-        bipOnly.sort();
-        var x, gt2, b2, qtB2, d2, bipDisp2, deltaDisp2, tr2, exp2;
-        for (x = 0; x < bipOnly.length; x++) {
-          gt2 = bipOnly[x];
-          b2 = bipAgg.get(gt2);
-          qtB2 = b2 ? b2.qt_num : 0;
-          d2 = qtB2 - 0;
-          bipDisp2 = formatPtAuto(qtB2);
-          deltaDisp2 = formatPt2(d2);
-          totB += qtB2;
-          tr2 = document.createElement("tr");
-          tr2.setAttribute("data-gtin", gt2);
-          tr2.setAttribute("data-carga", codCarga);
-          tr2.innerHTML =
-            '<td><button type="button" class="btn" data-expand="' +
-            gt2 +
-            '" title="Expandir" style="padding:2px 8px;margin-right:6px"><i class="fas fa-plus"></i></button>' +
-            gt2 +
-            "</td>" +
-            "<td>" +
-            ((b2 && b2.descricao) || "—") +
-            ' <small class="muted">(só bipado)</small></td>' +
-            '<td class="right bad">' +
-            bipDisp2 +
-            "</td>" +
-            '<td class="right bad"></td>' +
-            '<td class="right bad">' +
-            deltaDisp2 +
-            "</td>";
-          exp2 = makeExpandRow(gt2, codCarga);
-          tbody.appendChild(tr2);
-          tbody.appendChild(exp2);
-        }
-        var deltaTot = totB - totP,
-          badTot = Math.abs(deltaTot) > 1e-9,
-          trTot = document.createElement("tr");
-        trTot.innerHTML =
-          '<td colspan="2" class="right"><b>Totais da carga ' +
-          codCarga +
-          "</b></td>" +
-          '<td class="right ' +
-          (badTot ? "bad" : "") +
-          '"><b>' +
-          formatPt2(totB) +
-          "</b></td>" +
-          '<td class="right ' +
-          (badTot ? "bad" : "") +
-          '"><b>' +
-          formatPt2(totP) +
-          "</b></td>" +
-          '<td class="right ' +
-          (badTot ? "bad" : "") +
-          '"><b>' +
-          formatPt2(deltaTot) +
-          "</b></td>";
-        tbody.appendChild(trTot);
-
-        /* Delegação expandir / delete */
-        tbody.onclick = function (ev) {
-          ev = ev || window.event;
-          var tgt = ev.target || ev.srcElement;
-          var btn = null,
-            cur = tgt;
-          while (cur && cur !== tbody) {
-            if (cur.tagName && cur.tagName.toLowerCase() === "button") {
-              btn = cur;
-              break;
-            }
-            cur = cur.parentNode;
-          }
-          if (!btn) return;
-          var expandAttr = btn.getAttribute("data-expand");
-          if (expandAttr) {
-            var row = btn;
-            while (row && row.tagName && row.tagName.toLowerCase() !== "tr") {
-              row = row.parentNode;
-            }
-            if (!row) return;
-            var expRow = nextElementSiblingEl(row);
-            while (
-              expRow &&
-              !(
-                expRow.tagName &&
-                expRow.tagName.toLowerCase() === "tr" &&
-                hasClass(expRow, "expand-row")
-              )
-            ) {
-              expRow = nextElementSiblingEl(expRow);
-            }
-            if (!expRow) return;
-            var icon = btn.querySelector ? btn.querySelector("i") : null;
-            var hidden = hasClass(expRow, "hidden");
-            toggleClass(expRow, "hidden", !hidden);
-            if (icon) {
-              icon.className = hidden ? "fas fa-minus" : "fas fa-plus";
-            }
-            return;
-          }
-          if (btn.getAttribute("data-del")) {
-            var ts = btn.getAttribute("data-ts") || "",
-              cg = btn.getAttribute("data-carga") || "",
-              gt = btn.getAttribute("data-gtin") || "";
-            deleteBipagem(ts, cg, gt);
-            return;
-          }
-        };
-      }
-
-      /* ===== Select de carga no Config ===== */
-      function refreshCargaSelect() {
-        var sel = $("#codigoCargaCfgSel");
-        if (!sel) return;
-        var cur = sel.value,
-          cods = [],
-          i,
-          c;
-        for (i = 0; i < state.itens.length; i++) {
-          c = String(state.itens[i].CODCARGA || "").trim();
-          if (c && cods.indexOf(c) === -1) cods.push(c);
-        }
-        cods.sort();
-        var html = ['<option value="">Selecione o Nº da Carga</option>'],
-          j;
-        for (j = 0; j < cods.length; j++)
-          html.push('<option value="' + cods[j] + '">' + cods[j] + "</option>");
-        sel.innerHTML = html.join("");
-        if (cods.indexOf(cur) > -1) sel.value = cur;
-        else if (
-          state.codigoCargaCfg &&
-          cods.indexOf(state.codigoCargaCfg) > -1
-        )
-          sel.value = state.codigoCargaCfg;
-      }
-
-      /* ===== EAN (34 dígitos) ===== */
-      function parseEAN(raw) {
-        var d = onlyDigits(raw);
-        if (d.length < 34) {
-          while (d.length < 34) d += "0";
-        }
-        if (d.length < 34) return null;
-        var gtin14 = d.slice(2, 16),
-          filial = d.slice(16, 18),
-          validadeYYMMDD = d.slice(18, 24),
-          code310x = d.slice(24, 28),
-          qty6 = d.slice(28, 34),
-          qty = qty6,
-          dec = Number(code310x.slice(-1));
-        if (/^310[0-9]$/.test(code310x) && !isNaN(dec)) {
-          var v = parseInt(qty6, 10) || 0;
-          qty = String(v / Math.pow(10, dec));
-        }
-        return {
-          gtin14: gtin14,
-          filial: filial,
-          validadeYYMMDD: validadeYYMMDD,
-          code310x: code310x,
-          qty: qty,
-          raw34: d,
-        };
-      }
-      function findProdutosByGTIN(gt) {
-        if (state.produtosMap.has(gt)) return state.produtosMap.get(gt);
-        if (gt.charAt(0) === "0") {
-          var no0 = gt.slice(1);
-          if (state.produtosMap.has(no0)) return state.produtosMap.get(no0);
-        } else {
-          var w0 = "0" + gt;
-          if (state.produtosMap.has(w0)) return state.produtosMap.get(w0);
-        }
-        return null;
-      }
-
-      /* ===== Scan submit ===== */
-      function onScanSubmit() {
-        var eanErr = $("#eanErr"),
-          planWarn = $("#planilhaWarn");
-        if (eanErr) eanErr.classList.add("hidden");
-        if (planWarn) planWarn.classList.add("hidden");
-        var codCarga = (
-          ($("#codigoCarga") && $("#codigoCarga").value) ||
-          ""
-        ).trim();
-        if (!codCarga) {
-          alert("Nº da Carga é obrigatório.");
-          return;
-        }
-        if (state.produtosCount === 0) {
-          if (planWarn) planWarn.classList.remove("hidden");
-          alert("Carregue o cadastro (aba Configuração) antes de bipar.");
-          return;
-        }
-        var raw = (($("#eanInput") && $("#eanInput").value) || "").trim();
-        var parsed = parseEAN(raw);
-        if (!parsed) {
-          if (eanErr) {
-            eanErr.classList.remove("hidden");
-            eanErr.textContent =
-              "EAN bruto inválido/incompleto (precisa cobrir até 34).";
-          }
-          return;
-        }
-        var gtin14 = parsed.gtin14,
-          candidatos = findProdutosByGTIN(gtin14);
-        if (!candidatos || !candidatos.length) {
-          if (eanErr) {
-            eanErr.classList.remove("hidden");
-            eanErr.textContent =
-              "GTIN (pos. 3–16) " + gtin14 + " não encontrado no cadastro.";
-          }
-          return;
-        }
-        var p = candidatos[0];
-        var item = {
-          ts: nowClock(),
-          CODFILIAL: parsed.filial || p.CODFILIAL || "",
-          CODCARGA: codCarga,
-          CODMOTORISTA: p.CODMOTORISTA || "",
-          CODPROD: p.CODPROD || "",
-          DESCRICAO: p.DESCRICAO || "",
-          QT: parsed.qty != null ? parsed.qty : p.QT || "",
-          CUSTOREAL: p.CUSTOREAL || "",
-          EAN: gtin14,
-        };
-        state.itens.unshift(item);
-        if ($("#eanInput")) $("#eanInput").value = "";
-        saveItens();
-        refreshBadges();
-        renderMergedTable();
-        refreshTx();
-        refreshCargaSelect();
-      }
-
-      /* ===== Payloads ===== */
-      function buildPayload() {
-        var codCarga = getCurrentCarga();
-        var bipados = state.itens.filter(function (x) {
-          return String(x.CODCARGA || "").trim() === codCarga;
-        });
-        var plan_rows = state.planilhaByCarga.get(codCarga) || [];
-        var comparacao = codCarga ? getComparisonForCarga(codCarga) : null;
-        return {
-          cpf: onlyDigits(state.cpf),
-          calendario_os: state.calendarioOS,
-          carga: codCarga || null,
-          bipados_itens: bipados,
-          planilha_itens: plan_rows,
-          comparacao: comparacao,
-          divergiu: comparacao ? !!comparacao.divergente : null,
-          app_meta: {
-            ts: new Date().toISOString(),
-            produtos_carregados: state.produtosCount,
-            possui_planilha_para_carga: state.planilhaByCarga.has(codCarga),
-            versao_layout: "bate-carga-numcar-ean-pt2-2025-09-03",
-          },
-        };
-      }
-      function getAllCargas() {
-        var set = {},
-          i,
-          c;
-        for (i = 0; i < state.itens.length; i++) {
-          c = String(state.itens[i].CODCARGA || "").trim();
-          if (c) set[c] = true;
-        }
-        state.planilhaByCarga.forEach(function (_, k) {
-          set[String(k)] = true;
-        });
-        var list = [];
-        for (var k in set) if (set.hasOwnProperty(k)) list.push(k);
-        list.sort();
-        return list;
-      }
-      function buildPayloadAll() {
-        var cargas = getAllCargas();
-        var planPorCarga = {};
-        state.planilhaByCarga.forEach(function (rows, numcar) {
-          planPorCarga[numcar] = rows;
-        });
-        var comps = {},
-          divergiuAll = false,
-          i;
-        for (i = 0; i < cargas.length; i++) {
-          var cg = cargas[i];
-          var cmp = getComparisonForCarga(cg);
-          comps[cg] = cmp;
-          if (cmp && cmp.divergente) divergiuAll = true;
-        }
-        return {
-          cpf: onlyDigits(state.cpf),
-          calendario_os: state.calendarioOS,
-          cargas: cargas,
-          bipados_itens: state.itens.slice(0),
-          planilha_por_carga: planPorCarga,
-          comparacoes_por_carga: comps,
-          divergiu: divergiuAll,
-          current_view: buildPayload(),
-          app_meta: {
-            ts: new Date().toISOString(),
-            produtos_carregados: state.produtosCount,
-            possui_planilha_para_carga: state.planilhaByCarga.size > 0,
-            versao_layout: "bate-carga-numcar-ean-pt2-ALLCARGAS-2025-09-03",
-          },
-        };
-      }
-
-      /* ===== TX ===== */
-      function refreshTx() {
-        $("#txCount").textContent = String(state.itens.length);
-        $("#txOs").textContent = state.calendarioOS || "—";
-        $("#txCpf").textContent = state.cpf ? maskCPF(state.cpf) : "—";
-      }
-      function xhrPost(url, body, ctype, respType, ok, err) {
-        try {
-          var x = new XMLHttpRequest();
-          if (respType) x.responseType = respType;
-          x.open("POST", url, true);
-          if (ctype) x.setRequestHeader("Content-Type", ctype);
-          x.onreadystatechange = function () {
-            if (x.readyState === 4) {
-              if (x.status >= 200 && x.status < 300) ok(x);
-              else err(new Error("HTTP " + x.status));
-            }
-          };
-          x.onerror = function () {
-            err(new Error("Erro de rede"));
-          };
-          x.send(body);
-        } catch (e) {
-          err(e);
-        }
-      }
-      function transmitir() {
-        var url = state.calendarioOS ? BASE_URL + "/" + state.calendarioOS : "";
-        var retorno = $("#retorno");
-        if (!url) {
-          alert("Informe o Calendário OS na aba Configuração.");
-          return;
-        }
-        var payloadAll = buildPayloadAll();
-        if (retorno) retorno.textContent = "Enviando (todas as cargas)...";
-        xhrPost(
-          url,
-          JSON.stringify(payloadAll),
-          "application/json",
-          null,
-          function (x) {
-            var t = x.responseText || "";
-            if (retorno) retorno.textContent = t || "OK";
-          },
-          function (e) {
-            if (retorno) retorno.textContent = "Falha: " + e.message;
-          }
-        );
-      }
-
-      /* ===== Download / Cadastro & Divergência ===== */
-      function baixarPlanilhaServidor() {
-        var cpf = onlyDigits(state.cpf),
-          calendario_os = onlyDigits(state.calendarioOS),
-          num_carga = (
-            ($("#codigoCargaCfgSel") && $("#codigoCargaCfgSel").value) ||
-            ""
-          ).trim(),
-          ls = $("#loadStatus");
-        if (!isValidCPF(cpf)) {
-          alert("CPF inválido. Corrija na aba Configuração.");
-          return;
-        }
-        if (!calendario_os) {
-          alert("Informe o Calendário OS na aba Configuração.");
-          return;
-        }
-        if (!num_carga) {
-          alert("Selecione o Nº da Carga.");
-          return;
-        }
-        if (ls) ls.textContent = "Baixando divergência...";
-        var body =
-          "calendario_os=" +
-          encodeURIComponent(calendario_os) +
-          "&cpf=" +
-          encodeURIComponent(cpf) +
-          "&num_carga=" +
-          encodeURIComponent(num_carga);
-        xhrPost(
-          PLANILHA_URL,
-          body,
-          "application/x-www-form-urlencoded",
-          "arraybuffer",
-          function (x) {
-            var buf = x.response;
-            localStorage.setItem(
-              LS_KEYS.lastPlanilhaBlob,
-              arrayBufferToBase64(buf)
-            );
-            ingestConferenciaFromBuffer(buf, function () {
-              transmitir();
-            });
-          },
-          function (e) {
-            if (ls) ls.textContent = "Erro ao baixar: " + e.message;
-          }
-        );
-      }
-      function carregarProdutosServidor() {
-        var cpf = onlyDigits(state.cpf),
-          calendario_os = onlyDigits(state.calendarioOS),
-          ps = $("#loadProdStatus");
-        if (!isValidCPF(cpf)) {
-          alert("CPF inválido. Corrija na aba Configuração.");
-          return;
-        }
-        if (!calendario_os) {
-          alert("Informe o Calendário OS na aba Configuração.");
-          return;
-        }
-        if (ps) ps.textContent = "Baixando cadastro...";
-        var body =
-          "calendario_os=" +
-          encodeURIComponent(calendario_os) +
-          "&cpf=" +
-          encodeURIComponent(cpf);
-        xhrPost(
-          PLANILHA_URL,
-          body,
-          "application/x-www-form-urlencoded",
-          "arraybuffer",
-          function (x) {
-            ingestProdutosFromBuffer(x.response, ps);
-          },
-          function (e) {
-            if (ps) ps.textContent = "Erro ao baixar: " + e.message;
-          }
-        );
-      }
-      function arrayBufferToBase64(ab) {
-        var u8 = new Uint8Array(ab),
-          s = "",
-          i;
-        for (i = 0; i < u8.length; i++) s += String.fromCharCode(u8[i]);
-        return btoa(s);
-      }
-      function base64ToBlob(b64, ct) {
-        ct = ct || "application/octet-stream";
-        var byteChars = atob(b64),
-          byteNums = new Array(byteChars.length),
-          i;
-        for (i = 0; i < byteChars.length; i++)
-          byteNums[i] = byteChars.charCodeAt(i);
-        return new Blob([new Uint8Array(byteNums)], { type: ct });
-      }
-
-      /* ===== Excluir bipagem ===== */
-      function deleteBipagem(ts, codCarga, gtin14) {
-        try {
-          if (!confirm("Tem certeza que deseja excluir esta bipagem?")) return;
-          var idx = -1,
-            i,
-            it,
-            cargaAlvo = String(codCarga || "").trim(),
-            gtinAlvo = String(gtin14 || "").trim();
-          for (i = 0; i < state.itens.length; i++) {
-            it = state.itens[i];
-            if (
-              String(it.ts || "") === String(ts || "") &&
-              String(it.CODCARGA || "").trim() === cargaAlvo &&
-              leftPad(onlyDigits(it.EAN || ""), 14) === gtinAlvo
-            ) {
-              idx = i;
-              break;
-            }
-          }
-          if (idx === -1) {
-            alert("Item não encontrado para exclusão.");
-            return;
-          }
-          state.itens.splice(idx, 1);
-          saveItens();
-          refreshBadges();
-          renderMergedTable();
-          refreshTx();
-          refreshCargaSelect();
-        } catch (e) {
-          alert("Falha ao excluir: " + (e && e.message ? e.message : e));
-        }
-      }
-
-      /* ===== Reset para novo Calendário OS (preserva CPF) ===== */
-      function resetForNewOS(newOS) {
-        // limpa tudo que é ligado ao calendário anterior
-        localStorage.removeItem(LS_KEYS.itens);
-        localStorage.removeItem(LS_KEYS.produtos);
-        localStorage.removeItem(LS_KEYS.lastPlanilhaBlob);
-        localStorage.removeItem(LS_KEYS.carga_cfg);
-
-        state.itens = [];
-        state.produtosMap = new Map();
+        state.produtosMap = map;
         state.produtosCount = 0;
-        state.planilhaByCarga = new Map();
-        state.planAggByCarga = new Map();
-        state.codigoCargaCfg = "";
-
-        // aplica novo OS e salva
-        state.calendarioOS = onlyDigits(newOS);
-        localStorage.setItem(LS_KEYS.os, state.calendarioOS);
-
-        // UI
-        if ($("#codigoCarga")) $("#codigoCarga").value = "";
-        refreshBadges();
-        renderMergedTable();
-        refreshTx();
-        refreshCargaSelect();
-
-        // transmite tudo novamente (estado atual, possivelmente vazio)
-        transmitir();
+        map.forEach(function (list) {
+          state.produtosCount += list.length;
+        });
       }
+    } catch (e) {}
+  }
+  function saveItens() {
+    localStorage.setItem(LS_KEYS.itens, JSON.stringify(state.itens));
+  }
+  function saveProdutosFromMap() {
+    var arr = [];
+    state.produtosMap.forEach(function (list) {
+      for (var i = 0; i < list.length; i++) arr.push(list[i]);
+    });
+    localStorage.setItem(LS_KEYS.produtos, JSON.stringify(arr));
+  }
 
-      /* ===== Bootstrap ===== */
-      window.addEventListener("DOMContentLoaded", function () {
-        loadState();
-        refreshBadges();
-        applyLocks();
-        if ($("#cpf")) $("#cpf").value = maskCPF(state.cpf);
-        if ($("#calendarioOs")) $("#calendarioOs").value = state.calendarioOS;
+  /* ===== UI / Tabs ===== */
+  var tabs = {
+    leitura: $("#tab-leitura"),
+    config: $("#tab-config"),
+    tx: $("#tab-tx"),
+  };
+  $$(".tab-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var t = btn.getAttribute("data-tab");
+      $$(".tab-btn").forEach(function (b) {
+        b.setAttribute("aria-selected", String(b === btn));
+      });
+      for (var k in tabs) {
+        if (k !== t) {
+          tabs[k].classList.add("hidden");
+        } else {
+          tabs[k].classList.remove("hidden");
+        }
+      }
+      if (t === "leitura") {
+        var inp = $("#eanInput");
+        if (inp) inp.focus();
+      }
+      refreshBadges();
+      refreshTx();
+      if (t === "leitura") renderMergedTable();
+    });
+  });
+  function isLocked() {
+    return !isValidCPF(state.cpf);
+  }
+  function applyLocks() {
+    var locked = isLocked();
+    $("#lock-leitura").className = locked ? "overlay" : "hidden";
+    $("#lock-tx").className = locked ? "overlay" : "hidden";
+    $("#leitura-wrap").style.filter = locked
+      ? "blur(.5px) opacity(.6)"
+      : "none";
+    $("#tx-wrap").style.filter = locked ? "blur(.5px) opacity(.6)" : "none";
+  }
+  function refreshBadges() {
+    $("#osBadge").textContent = state.calendarioOS || "—";
+    if ($("#osBadge2"))
+      $("#osBadge2").textContent = state.calendarioOS || "—";
+    $("#cpfBadge").textContent = state.cpf ? maskCPF(state.cpf) : "—";
+    if ($("#cpfBadge2"))
+      $("#cpfBadge2").textContent = state.cpf ? maskCPF(state.cpf) : "—";
+    $("#txOs").textContent = state.calendarioOS || "—";
+    $("#txCpf").textContent = state.cpf ? maskCPF(state.cpf) : "—";
+    $("#prodCount").textContent = String(state.produtosCount);
+    if ($("#prodCount2"))
+      $("#prodCount2").textContent = String(state.produtosCount);
+    $("#itensCount").textContent = String(state.itens.length);
+    $("#txCount").textContent = String(state.itens.length);
+    $("#calendarioOs").value = state.calendarioOS;
+    $("#cpf").value = maskCPF(state.cpf);
+    $("#planilhaBadge").textContent = state.planilhaByCarga.size
+      ? "Carregada"
+      : "—";
+    refreshCargaSelect();
+  }
 
-        onId("cpf", "input", function (e) {
-          e.target.value = maskCPF(e.target.value);
-        });
-        onId("cpf", "blur", function () {
-          var val = $("#cpf") ? $("#cpf").value : "",
-            ok = isValidCPF(val);
-          if ($("#cpfErr")) $("#cpfErr").classList.toggle("hidden", ok);
-          if (ok) {
-            state.cpf = onlyDigits(val);
-            localStorage.setItem(LS_KEYS.cpf, state.cpf);
-            refreshBadges();
-            applyLocks();
+  /* ===== XLSX helpers ===== */
+  function normalizeHeader(s) {
+    return String(s || "")
+      .trim()
+      .toUpperCase();
+  }
+  function sheetToObjs(ws) {
+    var rows = XLSX.utils.sheet_to_json(ws, { defval: "", raw: false });
+    return rows.map(function (r) {
+      var o = {},
+        k;
+      for (k in r) {
+        o[normalizeHeader(k)] = r[k];
+      }
+      return o;
+    });
+  }
+
+  /* ===== Cadastro Cliente (produtos) ===== */
+  function ingestProdutosFromBuffer(buf, statusEl) {
+    ensureXLSX(function (err) {
+      if (err) {
+        if (statusEl) statusEl.textContent = "Erro: XLSX indisponível";
+        return;
+      }
+      try {
+        var wb = XLSX.read(new Uint8Array(buf), { type: "array" }),
+          ws = wb.Sheets[wb.SheetNames[0]];
+        var objs = sheetToObjs(ws),
+          map = new Map(),
+          total = 0,
+          erros = 0,
+          i,
+          row,
+          eanRaw,
+          eanDigits,
+          gtin14,
+          obj;
+        for (i = 0; i < objs.length; i++) {
+          row = objs[i];
+          eanRaw = String(row.EAN || row.ean || row.Ean || "");
+          eanDigits = onlyDigits(eanRaw);
+          if (!eanDigits) {
+            erros++;
+            continue;
           }
-        });
+          gtin14 = leftPad(eanDigits, 14);
+          obj = {
+            EAN: gtin14,
+            CODPROD: row.CODPROD || "",
+            DESCRICAO: row.DESCRICAO || "",
+            QT: row.QT || "",
+            CUSTOREAL: row.CUSTOREAL || "",
+            CODFILIAL: row.CODFILIAL || "",
+            CODMOTORISTA: row.CODMOTORISTA || "",
+            CODENDERECO: String(row.CODENDERECO || "").trim(),
+          };
+          if (!map.has(gtin14)) map.set(gtin14, [obj]);
+          else map.get(gtin14).push(obj);
+          total++;
+        }
+        state.produtosMap = map;
+        state.produtosCount = total;
+        saveProdutosFromMap();
+        if (statusEl)
+          statusEl.textContent =
+            "Cadastro carregado: " +
+            total +
+            " linhas / " +
+            map.size +
+            " GTIN(s)" +
+            (erros ? " (" + erros + " sem EAN)." : "");
+      } catch (ex) {
+        if (statusEl)
+          statusEl.textContent = "Erro ao ler cadastro: " + ex.message;
+      }
+    });
+  }
 
-        onId("calendarioOs", "input", function () {
-          var tmp = onlyDigits(
-            ($("#calendarioOs") && $("#calendarioOs").value) || ""
-          );
-          // Não salva automaticamente; salva somente no botão "Salvar"
+  /* ===== Planilha Divergência ===== */
+  function ingestConferenciaFromBuffer(buf, cb) {
+    ensureXLSX(function (err) {
+      var ls = $("#loadStatus");
+      if (err) {
+        if (ls) ls.textContent = "Erro: XLSX indisponível";
+        if (typeof cb === "function") cb(err);
+        return;
+      }
+      try {
+        var wb = XLSX.read(new Uint8Array(buf), { type: "array" }),
+          ws = wb.Sheets[wb.SheetNames[0]];
+        var objs = sheetToObjs(ws),
+          byCarga = new Map(),
+          i,
+          r,
+          numcar;
+        for (i = 0; i < objs.length; i++) {
+          r = objs[i];
+          numcar = String(r.NUMCAR || "").trim();
+          if (!numcar) continue;
+          if (!byCarga.has(numcar)) byCarga.set(numcar, []);
+          byCarga.get(numcar).push(r);
+        }
+        state.planilhaByCarga = byCarga;
+        var aggByCarga = new Map();
+        byCarga.forEach(function (rows, numcar2) {
+          aggByCarga.set(numcar2, buildPlanAggForCarga(rows));
         });
-
-        onId("btnSalvarOS", "click", function () {
-          var novoOS = onlyDigits(
-            ($("#calendarioOs") && $("#calendarioOs").value) || ""
-          );
-          if (!novoOS) {
-            alert("Informe um Calendário OS válido.");
-            return;
-          }
-          if (!isValidCPF(state.cpf)) {
-            alert("Salve um CPF válido antes.");
-            return;
-          }
-          var msg =
-            "Tem certeza que deseja salvar o novo Calendário OS " +
-            novoOS +
-            "?\n\nATENÇÃO: O sistema APAGARÁ TODOS os dados do Calendário OS atual (itens bipados, divergências e cadastro local) e reiniciará do zero.\nApós confirmar, os dados serão transmitidos novamente.";
-          if (confirm(msg)) {
-            resetForNewOS(novoOS);
-          }
+        state.planAggByCarga = aggByCarga;
+        if (ls)
+          ls.textContent =
+            "Planilha carregada: " + byCarga.size + " carga(s).";
+        $("#planilhaBadge").textContent = byCarga.size ? "Carregada" : "—";
+        renderMergedTable();
+        if (typeof cb === "function") cb(null);
+      } catch (ex) {
+        if (ls) ls.textContent = "Erro ao ler planilha: " + ex.message;
+        if (typeof cb === "function") cb(ex);
+      }
+    });
+  }
+  function buildPlanAggForCarga(rows) {
+    var m = new Map(),
+      i;
+    for (i = 0; i < rows.length; i++) {
+      var r = rows[i],
+        eanRaw = String(r.CODAUXILIAR || "").trim(),
+        eanDigits = onlyDigits(eanRaw);
+      if (!eanDigits) continue;
+      var gtin = leftPad(eanDigits, 14),
+        descr = String(r.DESCRICAO || "").trim(),
+        qtTxt = String(r.QT || "").trim(),
+        qtNum = parseFlexNumber(qtTxt),
+        vlTotal = parseFlexNumber(String(r.VLTOTAL || "").trim());
+      if (!m.has(gtin))
+        m.set(gtin, {
+          qt_num: 0,
+          qt_disp: "",
+          vltotal: 0,
+          descricao: descr,
         });
+      var o = m.get(gtin);
+      o.qt_num += isFinite(qtNum) ? qtNum : 0;
+      o.vltotal += isFinite(vlTotal) ? vlTotal : 0;
+      if (!o.descricao && descr) o.descricao = descr;
+    }
+    m.forEach(function (o) {
+      o.qt_disp = formatPt2(o.qt_num);
+    });
+    return m;
+  }
 
-        onId("codigoCargaCfgSel", "change", function () {
-          state.codigoCargaCfg = (
-            ($("#codigoCargaCfgSel") && $("#codigoCargaCfgSel").value) ||
-            ""
-          ).trim();
-          localStorage.setItem(LS_KEYS.carga_cfg, state.codigoCargaCfg);
-        });
+  /* ===== Agregação bipados ===== */
+  function getBipAggForCarga(codCarga) {
+    var m = new Map(),
+      i,
+      it,
+      gtin,
+      descr,
+      qtNum,
+      custo,
+      o;
+    for (i = 0; i < state.itens.length; i++) {
+      it = state.itens[i];
+      if (String(it.CODCARGA || "").trim() !== codCarga) continue;
+      gtin = leftPad(onlyDigits(it.EAN || ""), 14);
+      descr = String(it.DESCRICAO || "").trim();
+      qtNum = parseFlexNumber(String(it.QT == null ? "" : it.QT));
+      custo = parseFlexNumber(
+        String(it.CUSTOREAL == null ? "" : it.CUSTOREAL)
+      );
+      if (!m.has(gtin))
+        m.set(gtin, { qt_num: 0, custoreal: 0, descricao: descr });
+      o = m.get(gtin);
+      o.qt_num += isFinite(qtNum) ? qtNum : 0;
+      o.custoreal += isFinite(custo) ? custo : 0;
+      if (!o.descricao && descr) o.descricao = descr;
+    }
+    return m;
+  }
+  function getCurrentCarga() {
+    return String(
+      ($("#codigoCarga") && $("#codigoCarga").value) || ""
+    ).trim();
+  }
 
-        onId("btnBaixarPlanilhaSrv", "click", baixarPlanilhaServidor);
-        // Botão "Recarregar última" REMOVIDO conforme solicitado
-        onId("btnCarregarProdutos", "click", carregarProdutosServidor);
+  /* ===== Comparação ===== */
+  function getComparisonForCarga(codCarga) {
+    var planAgg = state.planAggByCarga.get(codCarga) || new Map(),
+      bipAgg = getBipAggForCarga(codCarga),
+      allKeys = [],
+      itens = [],
+      tot_bip = 0,
+      tot_plan = 0,
+      tot_custo_bip = 0,
+      tot_vltotal_plan = 0;
+    planAgg.forEach(function (_, k) {
+      allKeys.push(k);
+    });
+    bipAgg.forEach(function (_, k) {
+      if (allKeys.indexOf(k) === -1) allKeys.push(k);
+    });
+    var i, gtin, p, b, qtP_num, qtB_num, dQT;
+    for (i = 0; i < allKeys.length; i++) {
+      gtin = allKeys[i];
+      p = planAgg.get(gtin);
+      b = bipAgg.get(gtin);
+      qtP_num = p ? p.qt_num : 0;
+      qtB_num = b ? b.qt_num : 0;
+      dQT = qtB_num - qtP_num;
+      tot_bip += qtB_num;
+      tot_plan += qtP_num;
+      tot_custo_bip += b ? b.custoreal : 0;
+      tot_vltotal_plan += p ? p.vltotal : 0;
+      itens.push({
+        EAN: gtin,
+        DESCRICAO: (b && b.descricao) || (p && p.descricao) || "",
+        qt_bip_num: qtB_num,
+        qt_plan_num: qtP_num,
+        qt_plan_disp: p ? p.qt_disp : "",
+        delta_qt_num: dQT,
+        so_bipado: !!b && !p,
+        so_planilha: !!p && !b,
+      });
+    }
+    itens.sort(function (a, b2) {
+      return Math.abs(b2.delta_qt_num) - Math.abs(a.delta_qt_num);
+    });
+    var divergente = false,
+      j;
+    for (j = 0; j < itens.length; j++) {
+      if (Math.abs(itens[j].delta_qt_num) > 1e-9) {
+        divergente = true;
+        break;
+      }
+    }
+    return {
+      carga: codCarga,
+      itens: itens,
+      totais: {
+        qt_bipado: tot_bip,
+        qt_planilha: tot_plan,
+        delta_qt: tot_bip - tot_plan,
+        custo_bipado: tot_custo_bip,
+        vltotal_planilha: tot_vltotal_plan,
+      },
+      divergente: divergente,
+    };
+  }
 
-        onId("codigoCarga", "input", function () {
-          renderMergedTable();
-          refreshTx();
-        });
-        onId("eanInput", "keydown", function (e) {
-          var key = e.key || e.keyCode;
-          if (key === "Enter" || key === 13) {
-            e.preventDefault();
-            if (isLocked()) return;
-            onScanSubmit();
-          }
-        });
+  /* ===== Util EXPANSÃO ===== */
+  function nextElementSiblingEl(el) {
+    var n = el.nextSibling;
+    while (n && n.nodeType !== 1) n = n.nextSibling;
+    return n;
+  }
+  function hasClass(el, cls) {
+    return (" " + el.className + " ").indexOf(" " + cls + " ") > -1;
+  }
+  function toggleClass(el, cls, force) {
+    var cur = " " + el.className + " ";
+    if (force === true) {
+      if (cur.indexOf(" " + cls + " ") === -1)
+        el.className = (cur + cls).trim();
+      return;
+    }
+    if (force === false) {
+      if (cur.indexOf(" " + cls + " ") > -1)
+        el.className = cur.replace(" " + cls + " ", " ").trim();
+      return;
+    }
+    if (cur.indexOf(" " + cls + " ") > -1)
+      el.className = cur.replace(" " + cls + " ", " ").trim();
+    else el.className = (cur + cls).trim();
+  }
 
-        onId("btnTransmitir", "click", function () {
-          if (isLocked()) {
-            alert("Salve um CPF válido na aba Configuração.");
-            return;
-          }
+  /* ===== Render tabela + expansão ===== */
+  function makeExpandRow(gtin, codCarga) {
+    var tr = document.createElement("tr");
+    tr.className = "expand-row hidden";
+    tr.setAttribute("data-gtin", gtin);
+    tr.setAttribute("data-carga", codCarga);
+    var td = document.createElement("td");
+    td.colSpan = 5;
+    var html = [];
+    html.push(
+      '<div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px">'
+    );
+    html.push(
+      '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px"><span class="pill"><b>EAN:</b> ' +
+        gtin +
+        '</span><span class="pill"><b>Nº da Carga:</b> ' +
+        codCarga +
+        "</span></div>"
+    );
+    html.push(
+      '<div style="display:grid;gap:8px"><div class="muted">Bipados (linhas somadas):</div>'
+    );
+    html.push(
+      '<table style="width:100%;border-collapse:separate;border-spacing:0">'
+    );
+    html.push(
+      '<thead><tr><th style="text-align:left;padding:6px 8px">TS</th><th style="text-align:left;padding:6px 8px">Descrição</th><th style="text-align:right;padding:6px 8px">QT</th><th style="text-align:center;padding:6px 8px">Ações</th></tr></thead><tbody>'
+    );
+    var i, it;
+    for (i = 0; i < state.itens.length; i++) {
+      it = state.itens[i];
+      if (String(it.CODCARGA || "").trim() !== codCarga) continue;
+      if (leftPad(onlyDigits(it.EAN || ""), 14) !== gtin) continue;
+      html.push(
+        "<tr>" +
+          '<td style="padding:6px 8px">' +
+          (it.ts || "-") +
+          "</td>" +
+          '<td style="padding:6px 8px">' +
+          (it.DESCRICAO || "-") +
+          "</td>" +
+          '<td style="padding:6px 8px;text-align:right">' +
+          formatPtAuto(parseFlexNumber(it.QT)) +
+          "</td>" +
+          '<td style="padding:6px 8px;text-align:center"><button type="button" class="btn" title="Excluir bipagem" data-del="1" data-ts="' +
+          (it.ts || "") +
+          '" data-carga="' +
+          codCarga +
+          '" data-gtin="' +
+          gtin +
+          '"><i class="fas fa-trash"></i></button></td>' +
+          "</tr>"
+      );
+    }
+    html.push("</tbody></table>");
+    html.push(
+      '<div class="muted" style="margin-top:8px">Planilha (linhas somadas):</div>'
+    );
+    html.push(
+      '<table style="width:100%;border-collapse:separate;border-spacing:0"><thead><tr><th style="text-align:left;padding:6px 8px">DESCRIÇÃO</th><th style="text-align:right;padding:6px 8px">QT</th></tr></thead><tbody>'
+    );
+    var rows = state.planilhaByCarga.get(codCarga) || [],
+      j,
+      r,
+      eanRaw,
+      qtTxt;
+    for (j = 0; j < rows.length; j++) {
+      r = rows[j];
+      eanRaw = onlyDigits(String(r.CODAUXILIAR || ""));
+      if (leftPad(eanRaw, 14) !== gtin) continue;
+      qtTxt = String(r.QT || "");
+      html.push(
+        '<tr><td style="padding:6px 8px">' +
+          (r.DESCRICAO || "-") +
+          '</td><td style="padding:6px 8px;text-align:right">' +
+          qtTxt +
+          "</td></tr>"
+      );
+    }
+    html.push("</tbody></table></div></div>");
+    td.innerHTML = html.join("");
+    tr.appendChild(td);
+    return tr;
+  }
+  function renderMergedTable() {
+    var tbody = $("#tbody");
+    tbody.innerHTML = "";
+    var codCarga = getCurrentCarga();
+    if (!codCarga) {
+      var tr0 = document.createElement("tr");
+      tr0.innerHTML =
+        '<td colspan="5" class="muted">Informe/bipe um <b>Nº da Carga</b> para exibir os itens.</td>';
+      tbody.appendChild(tr0);
+      return;
+    }
+    var planAgg = state.planAggByCarga.get(codCarga) || new Map(),
+      bipAgg = getBipAggForCarga(codCarga),
+      cmp = getComparisonForCarga(codCarga),
+      badgeHost = $("#planilhaBadge");
+    if (badgeHost) {
+      var hasPlan = state.planilhaByCarga.has(codCarga);
+      badgeHost.textContent = hasPlan
+        ? cmp.divergente
+          ? "Divergente"
+          : "OK"
+        : "—";
+      badgeHost.className =
+        "pill " + (hasPlan ? (cmp.divergente ? "bad" : "") : "");
+    }
+    var totB = 0,
+      totP = 0,
+      planKeys = [];
+    planAgg.forEach(function (_, key) {
+      planKeys.push(key);
+    });
+    planKeys.sort();
+    if (planKeys.length === 0) {
+      var tr1 = document.createElement("tr");
+      tr1.innerHTML =
+        '<td colspan="5" class="muted">Nenhuma linha na planilha para o NUMCAR <b>' +
+        codCarga +
+        "</b>.</td>";
+      tbody.appendChild(tr1);
+    } else {
+      var idx,
+        gt,
+        p,
+        b,
+        qtP,
+        qtB,
+        d,
+        desc,
+        bad,
+        bipDisp,
+        planDisp,
+        deltaDisp,
+        tr,
+        exp;
+      for (idx = 0; idx < planKeys.length; idx++) {
+        gt = planKeys[idx];
+        p = planAgg.get(gt);
+        b = bipAgg.get(gt);
+        qtP = p ? p.qt_num : 0;
+        qtB = b ? b.qt_num : 0;
+        d = qtB - qtP;
+        desc = (b && b.descricao) || (p && p.descricao) || "—";
+        bad = Math.abs(d) > 1e-9;
+        bipDisp = formatPtAuto(qtB);
+        planDisp = p ? p.qt_disp : "";
+        deltaDisp = formatPt2(d);
+        totB += qtB;
+        totP += qtP;
+        tr = document.createElement("tr");
+        tr.setAttribute("data-gtin", gt);
+        tr.setAttribute("data-carga", codCarga);
+        tr.innerHTML =
+          '<td><button type="button" class="btn" data-expand="' +
+          gt +
+          '" title="Expandir" style="padding:2px 8px;margin-right:6px"><i class="fas fa-plus"></i></button>' +
+          gt +
+          "</td>" +
+          "<td>" +
+          desc +
+          "</td>" +
+          '<td class="right ' +
+          (bad ? "bad" : "") +
+          '">' +
+          bipDisp +
+          "</td>" +
+          '<td class="right ' +
+          (bad ? "bad" : "") +
+          '">' +
+          planDisp +
+          "</td>" +
+          '<td class="right ' +
+          (bad ? "bad" : "") +
+          '">' +
+          deltaDisp +
+          "</td>";
+        exp = makeExpandRow(gt, codCarga);
+        tbody.appendChild(tr);
+        tbody.appendChild(exp);
+      }
+    }
+    var bipOnly = [];
+    bipAgg.forEach(function (_, key) {
+      if (!planAgg.has(key)) bipOnly.push(key);
+    });
+    bipOnly.sort();
+    var x, gt2, b2, qtB2, d2, bipDisp2, deltaDisp2, tr2, exp2;
+    for (x = 0; x < bipOnly.length; x++) {
+      gt2 = bipOnly[x];
+      b2 = bipAgg.get(gt2);
+      qtB2 = b2 ? b2.qt_num : 0;
+      d2 = qtB2 - 0;
+      bipDisp2 = formatPtAuto(qtB2);
+      deltaDisp2 = formatPt2(d2);
+      totB += qtB2;
+      tr2 = document.createElement("tr");
+      tr2.setAttribute("data-gtin", gt2);
+      tr2.setAttribute("data-carga", codCarga);
+      tr2.innerHTML =
+        '<td><button type="button" class="btn" data-expand="' +
+        gt2 +
+        '" title="Expandir" style="padding:2px 8px;margin-right:6px"><i class="fas fa-plus"></i></button>' +
+        gt2 +
+        "</td>" +
+        "<td>" +
+        ((b2 && b2.descricao) || "—") +
+        ' <small class="muted">(só bipado)</small></td>' +
+        '<td class="right bad">' +
+        bipDisp2 +
+        "</td>" +
+        '<td class="right bad"></td>' +
+        '<td class="right bad">' +
+        deltaDisp2 +
+        "</td>";
+      exp2 = makeExpandRow(gt2, codCarga);
+      tbody.appendChild(tr2);
+      tbody.appendChild(exp2);
+    }
+    var deltaTot = totB - totP,
+      badTot = Math.abs(deltaTot) > 1e-9,
+      trTot = document.createElement("tr");
+    trTot.innerHTML =
+      '<td colspan="2" class="right"><b>Totais da carga ' +
+      codCarga +
+      "</b></td>" +
+      '<td class="right ' +
+      (badTot ? "bad" : "") +
+      '"><b>' +
+      formatPt2(totB) +
+      "</b></td>" +
+      '<td class="right ' +
+      (badTot ? "bad" : "") +
+      '"><b>' +
+      formatPt2(totP) +
+      "</b></td>" +
+      '<td class="right ' +
+      (badTot ? "bad" : "") +
+      '"><b>' +
+      formatPt2(deltaTot) +
+      "</b></td>";
+    tbody.appendChild(trTot);
+
+    /* Delegação expandir / delete */
+    tbody.onclick = function (ev) {
+      ev = ev || window.event;
+      var tgt = ev.target || ev.srcElement;
+      var btn = null,
+        cur = tgt;
+      while (cur && cur !== tbody) {
+        if (cur.tagName && cur.tagName.toLowerCase() === "button") {
+          btn = cur;
+          break;
+        }
+        cur = cur.parentNode;
+      }
+      if (!btn) return;
+      var expandAttr = btn.getAttribute("data-expand");
+      if (expandAttr) {
+        var row = btn;
+        while (row && row.tagName && row.tagName.toLowerCase() !== "tr") {
+          row = row.parentNode;
+        }
+        if (!row) return;
+        var expRow = nextElementSiblingEl(row);
+        while (
+          expRow &&
+          !(
+            expRow.tagName &&
+            expRow.tagName.toLowerCase() === "tr" &&
+            hasClass(expRow, "expand-row")
+          )
+        ) {
+          expRow = nextElementSiblingEl(expRow);
+        }
+        if (!expRow) return;
+        var icon = btn.querySelector ? btn.querySelector("i") : null;
+        var hidden = hasClass(expRow, "hidden");
+        toggleClass(expRow, "hidden", !hidden);
+        if (icon) {
+          icon.className = hidden ? "fas fa-minus" : "fas fa-plus";
+        }
+        return;
+      }
+      if (btn.getAttribute("data-del")) {
+        var ts = btn.getAttribute("data-ts") || "",
+          cg = btn.getAttribute("data-carga") || "",
+          gt = btn.getAttribute("data-gtin") || "";
+        deleteBipagem(ts, cg, gt);
+        return;
+      }
+    };
+  }
+
+  /* ===== Select de carga no Config ===== */
+  function refreshCargaSelect() {
+    var sel = $("#codigoCargaCfgSel");
+    if (!sel) return;
+    var cur = sel.value,
+      cods = [],
+      i,
+      c;
+    for (i = 0; i < state.itens.length; i++) {
+      c = String(state.itens[i].CODCARGA || "").trim();
+      if (c && cods.indexOf(c) === -1) cods.push(c);
+    }
+    cods.sort();
+    var html = ['<option value="">Selecione o Nº da Carga</option>'],
+      j;
+    for (j = 0; j < cods.length; j++)
+      html.push('<option value="' + cods[j] + '">' + cods[j] + "</option>");
+    sel.innerHTML = html.join("");
+    if (cods.indexOf(cur) > -1) sel.value = cur;
+    else if (
+      state.codigoCargaCfg &&
+      cods.indexOf(state.codigoCargaCfg) > -1
+    )
+      sel.value = state.codigoCargaCfg;
+  }
+
+  /* ===== EAN (34 dígitos) ===== */
+  function parseEAN(raw) {
+    var d = onlyDigits(raw);
+    if (d.length < 34) {
+      while (d.length < 34) d += "0";
+    }
+    if (d.length < 34) return null;
+    var gtin14 = d.slice(2, 16),
+      filial = d.slice(16, 18),
+      validadeYYMMDD = d.slice(18, 24),
+      code310x = d.slice(24, 28),
+      qty6 = d.slice(28, 34),
+      qty = qty6,
+      dec = Number(code310x.slice(-1));
+    if (/^310[0-9]$/.test(code310x) && !isNaN(dec)) {
+      var v = parseInt(qty6, 10) || 0;
+      qty = String(v / Math.pow(10, dec));
+    }
+    return {
+      gtin14: gtin14,
+      filial: filial,
+      validadeYYMMDD: validadeYYMMDD,
+      code310x: code310x,
+      qty: qty,
+      raw34: d,
+    };
+  }
+  function findProdutosByGTIN(gt) {
+    if (state.produtosMap.has(gt)) return state.produtosMap.get(gt);
+    if (gt.charAt(0) === "0") {
+      var no0 = gt.slice(1);
+      if (state.produtosMap.has(no0)) return state.produtosMap.get(no0);
+    } else {
+      var w0 = "0" + gt;
+      if (state.produtosMap.has(w0)) return state.produtosMap.get(w0);
+    }
+    return null;
+  }
+
+  /* ===== Suporte EAN-13: modal de quantidade ===== */
+  var ean13Pending = null;
+  function openQtyModal(payload) {
+    ean13Pending = payload;
+    var inp = $("#qtyInput");
+    var err = $("#qtyErr");
+    if (inp) inp.value = "";
+    if (err) err.classList.add("hidden");
+    var m = $("#qtyModal");
+    if (m) m.classList.remove("hidden");
+    setTimeout(function () {
+      if (inp) inp.focus();
+    }, 0);
+  }
+  function closeQtyModal() {
+    ean13Pending = null;
+    var m = $("#qtyModal");
+    if (m) m.classList.add("hidden");
+  }
+  function confirmQtyModal() {
+    if (!ean13Pending) return;
+    var inp = $("#qtyInput");
+    var err = $("#qtyErr");
+    var v = inp ? inp.value : "";
+    var q = parseFlexNumber(v);
+    if (!isFinite(q) || q <= 0) {
+      if (err) err.classList.remove("hidden");
+      return;
+    }
+    var p = ean13Pending.prod || {};
+    var item = {
+      ts: nowClock(),
+      CODFILIAL: p.CODFILIAL || "",
+      CODCARGA: ean13Pending.codCarga || "",
+      CODMOTORISTA: p.CODMOTORISTA || "",
+      CODPROD: p.CODPROD || "",
+      DESCRICAO: p.DESCRICAO || "",
+      QT: q,
+      CUSTOREAL: p.CUSTOREAL || "",
+      EAN: ean13Pending.gtin14 || "",
+    };
+    state.itens.unshift(item);
+    saveItens();
+    closeQtyModal();
+    refreshBadges();
+    renderMergedTable();
+    refreshTx();
+    refreshCargaSelect();
+  }
+
+  /* ===== Scan submit ===== */
+  function onScanSubmit() {
+    var eanErr = $("#eanErr"),
+      planWarn = $("#planilhaWarn");
+    if (eanErr) eanErr.classList.add("hidden");
+    if (planWarn) planWarn.classList.add("hidden");
+    var codCarga = (
+      ($("#codigoCarga") && $("#codigoCarga").value) ||
+      ""
+    ).trim();
+    if (!codCarga) {
+      alert("Nº da Carga é obrigatório.");
+      return;
+    }
+    if (state.produtosCount === 0) {
+      if (planWarn) planWarn.classList.remove("hidden");
+      alert("Carregue o cadastro (aba Configuração) antes de bipar.");
+      return;
+    }
+    var raw = (($("#eanInput") && $("#eanInput").value) || "").trim();
+    var digits = onlyDigits(raw);
+    /* Suporte EAN-13: abre modal para digitar quantidade */
+    if (digits.length === 13) {
+      var gt14 = leftPad(digits, 14);
+      var cand = findProdutosByGTIN(gt14);
+      if (!cand || !cand.length) {
+        if (eanErr) {
+          eanErr.classList.remove("hidden");
+          eanErr.textContent =
+            "EAN-13 " + digits + " (GTIN " + gt14 + ") não encontrado no cadastro.";
+        }
+        return;
+      }
+      if ($("#eanInput")) $("#eanInput").value = "";
+      openQtyModal({ gtin14: gt14, codCarga: codCarga, prod: cand[0] });
+      return;
+    }
+    var parsed = parseEAN(raw);
+    if (!parsed) {
+      if (eanErr) {
+        eanErr.classList.remove("hidden");
+        eanErr.textContent =
+          "EAN bruto inválido/incompleto (precisa cobrir até 34).";
+      }
+      return;
+    }
+    var gtin14 = parsed.gtin14,
+      candidatos = findProdutosByGTIN(gtin14);
+    if (!candidatos || !candidatos.length) {
+      if (eanErr) {
+        eanErr.classList.remove("hidden");
+        eanErr.textContent =
+          "GTIN (pos. 3–16) " + gtin14 + " não encontrado no cadastro.";
+      }
+      return;
+    }
+    var p = candidatos[0];
+    var item = {
+      ts: nowClock(),
+      CODFILIAL: parsed.filial || p.CODFILIAL || "",
+      CODCARGA: codCarga,
+      CODMOTORISTA: p.CODMOTORISTA || "",
+      CODPROD: p.CODPROD || "",
+      DESCRICAO: p.DESCRICAO || "",
+      QT: parsed.qty != null ? parsed.qty : p.QT || "",
+      CUSTOREAL: p.CUSTOREAL || "",
+      EAN: gtin14,
+    };
+    state.itens.unshift(item);
+    if ($("#eanInput")) $("#eanInput").value = "";
+    saveItens();
+    refreshBadges();
+    renderMergedTable();
+    refreshTx();
+    refreshCargaSelect();
+  }
+
+  /* ===== Payloads ===== */
+  function buildPayload() {
+    var codCarga = getCurrentCarga();
+    var bipados = state.itens.filter(function (x) {
+      return String(x.CODCARGA || "").trim() === codCarga;
+    });
+    var plan_rows = state.planilhaByCarga.get(codCarga) || [];
+    var comparacao = codCarga ? getComparisonForCarga(codCarga) : null;
+    return {
+      cpf: onlyDigits(state.cpf),
+      calendario_os: state.calendarioOS,
+      carga: codCarga || null,
+      bipados_itens: bipados,
+      planilha_itens: plan_rows,
+      comparacao: comparacao,
+      divergiu: comparacao ? !!comparacao.divergente : null,
+      app_meta: {
+        ts: new Date().toISOString(),
+        produtos_carregados: state.produtosCount,
+        possui_planilha_para_carga: state.planilhaByCarga.has(codCarga),
+        versao_layout: "bate-carga-numcar-ean-pt2-2025-09-03",
+      },
+    };
+  }
+  function getAllCargas() {
+    var set = {},
+      i,
+      c;
+    for (i = 0; i < state.itens.length; i++) {
+      c = String(state.itens[i].CODCARGA || "").trim();
+      if (c) set[c] = true;
+    }
+    state.planilhaByCarga.forEach(function (_, k) {
+      set[String(k)] = true;
+    });
+    var list = [];
+    for (var k in set) if (set.hasOwnProperty(k)) list.push(k);
+    list.sort();
+    return list;
+  }
+  function buildPayloadAll() {
+    var cargas = getAllCargas();
+    var planPorCarga = {};
+    state.planilhaByCarga.forEach(function (rows, numcar) {
+      planPorCarga[numcar] = rows;
+    });
+    var comps = {},
+      divergiuAll = false,
+      i;
+    for (i = 0; i < cargas.length; i++) {
+      var cg = cargas[i];
+      var cmp = getComparisonForCarga(cg);
+      comps[cg] = cmp;
+      if (cmp && cmp.divergente) divergiuAll = true;
+    }
+    return {
+      cpf: onlyDigits(state.cpf),
+      calendario_os: state.calendarioOS,
+      cargas: cargas,
+      bipados_itens: state.itens.slice(0),
+      planilha_por_carga: planPorCarga,
+      comparacoes_por_carga: comps,
+      divergiu: divergiuAll,
+      current_view: buildPayload(),
+      app_meta: {
+        ts: new Date().toISOString(),
+        produtos_carregados: state.produtosCount,
+        possui_planilha_para_carga: state.planilhaByCarga.size > 0,
+        versao_layout: "bate-carga-numcar-ean-pt2-ALLCARGAS-2025-09-03",
+      },
+    };
+  }
+
+  /* ===== TX ===== */
+  function refreshTx() {
+    $("#txCount").textContent = String(state.itens.length);
+    $("#txOs").textContent = state.calendarioOS || "—";
+    $("#txCpf").textContent = state.cpf ? maskCPF(state.cpf) : "—";
+  }
+  function xhrPost(url, body, ctype, respType, ok, err) {
+    try {
+      var x = new XMLHttpRequest();
+      if (respType) x.responseType = respType;
+      x.open("POST", url, true);
+      if (ctype) x.setRequestHeader("Content-Type", ctype);
+      x.onreadystatechange = function () {
+        if (x.readyState === 4) {
+          if (x.status >= 200 && x.status < 300) ok(x);
+          else err(new Error("HTTP " + x.status));
+        }
+      };
+      x.onerror = function () {
+        err(new Error("Erro de rede"));
+      };
+      x.send(body);
+    } catch (e) {
+      err(e);
+    }
+  }
+  function transmitir() {
+    var url = state.calendarioOS ? BASE_URL + "/" + state.calendarioOS : "";
+    var retorno = $("#retorno");
+    if (!url) {
+      alert("Informe o Calendário OS na aba Configuração.");
+      return;
+    }
+    var payloadAll = buildPayloadAll();
+    if (retorno) retorno.textContent = "Enviando (todas as cargas)...";
+    xhrPost(
+      url,
+      JSON.stringify(payloadAll),
+      "application/json",
+      null,
+      function (x) {
+        var t = x.responseText || "";
+        if (retorno) retorno.textContent = t || "OK";
+      },
+      function (e) {
+        if (retorno) retorno.textContent = "Falha: " + e.message;
+      }
+    );
+  }
+
+  /* ===== NOVO: hidratar/substituir STORAGE a partir do raw_json ===== */
+  function coalesceArray(a){ return Array.isArray(a) ? a : []; }
+  function hydrateFromRawJsonReplace(raw){
+    try {
+      if (typeof raw === "string") { try { raw = JSON.parse(raw); } catch(_e){} }
+      var fromAll = coalesceArray(raw && raw.bipados_itens);
+      var fromCurrent = coalesceArray(raw && raw.current_view && raw.current_view.bipados_itens);
+      var srv = [].concat(fromAll, fromCurrent);
+      state.itens = srv;
+      saveItens();
+      var byCarga = new Map();
+      if (raw && raw.planilha_por_carga && typeof raw.planilha_por_carga === "object") {
+        for (var k in raw.planilha_por_carga) {
+          if (!raw.planilha_por_carga.hasOwnProperty(k)) continue;
+          var rows = coalesceArray(raw.planilha_por_carga[k]);
+          if (rows.length) byCarga.set(String(k), rows);
+        }
+      }
+      if (raw && raw.current_view && Array.isArray(raw.current_view.planilha_itens)) {
+        var cvCarga = String(raw.current_view.carga || "");
+        if (cvCarga) byCarga.set(cvCarga, raw.current_view.planilha_itens);
+      }
+      if (byCarga.size) {
+        state.planilhaByCarga = byCarga;
+        var agg = new Map();
+        byCarga.forEach(function(rows, numcar){ agg.set(numcar, buildPlanAggForCarga(rows)); });
+        state.planAggByCarga = agg;
+      }
+      refreshBadges(); renderMergedTable(); refreshTx(); refreshCargaSelect();
+    } catch(e){
+      var r = $("#retorno"); if (r) r.textContent = "Falha ao aplicar raw_json: " + (e && e.message ? e.message : e);
+    }
+  }
+
+  /* ===== NOVO: Continuar de onde parei ===== */
+  function continuarDeOndeParei() {
+    var retorno = $("#retorno");
+    var cpf = onlyDigits(state.cpf);
+    var calendario_os = onlyDigits(state.calendarioOS);
+    if (!isValidCPF(cpf)) {
+      alert("CPF inválido. Corrija na aba Configuração.");
+      return;
+    }
+    if (!calendario_os) {
+      alert("Informe o Calendário OS na aba Configuração.");
+      return;
+    }
+    if (retorno) retorno.textContent = "Consultando progresso...";
+    var body =
+      "calendario_os=" +
+      encodeURIComponent(calendario_os) +
+      "&cpf=" +
+      encodeURIComponent(cpf);
+    xhrPost(
+      CONTINUAR_URL,
+      body,
+      "application/x-www-form-urlencoded",
+      null,
+      function (x) {
+        var txt = x.responseText || "";
+        var obj = null;
+        try { obj = JSON.parse(txt); } catch(_e){}
+        var raw = null;
+        if (obj && obj.raw_json) {
+          raw = obj.raw_json;
+        } else if (obj && obj.data && (obj.data.raw_json || obj.data.bipados_itens)) {
+          raw = obj.data.raw_json || obj.data;
+        } else if (obj && (obj.bipados_itens || (obj.current_view && obj.current_view.bipados_itens))) {
+          raw = obj;
+        } else {
+          raw = obj || txt;
+        }
+        hydrateFromRawJsonReplace(raw);
+        try {
+          var show = (typeof raw === "string") ? JSON.parse(raw) : raw;
+          var qtd = 0;
+          if (show && show.bipados_itens && show.bipados_itens.length) qtd = show.bipados_itens.length;
+          else if (show && show.current_view && show.current_view.bipados_itens && show.current_view.bipados_itens.length) qtd = show.current_view.bipados_itens.length;
+          if (retorno) retorno.textContent = "Histórico aplicado. Itens carregados: " + qtd;
+        } catch(_e2) {
+          if (retorno) retorno.textContent = "Histórico aplicado.";
+        }
+      },
+      function (e) {
+        if (retorno) retorno.textContent = "Falha: " + e.message;
+      }
+    );
+  }
+
+  /* ===== Download / Cadastro & Divergência ===== */
+  function baixarPlanilhaServidor() {
+    var cpf = onlyDigits(state.cpf),
+      calendario_os = onlyDigits(state.calendarioOS),
+      num_carga = (
+        ($("#codigoCargaCfgSel") && $("#codigoCargaCfgSel").value) ||
+        ""
+      ).trim(),
+      ls = $("#loadStatus");
+    if (!isValidCPF(cpf)) {
+      alert("CPF inválido. Corrija na aba Configuração.");
+      return;
+    }
+    if (!calendario_os) {
+      alert("Informe o Calendário OS na aba Configuração.");
+      return;
+    }
+    if (!num_carga) {
+      alert("Selecione o Nº da Carga.");
+      return;
+    }
+    if (ls) ls.textContent = "Baixando divergência...";
+    var body =
+      "calendario_os=" +
+      encodeURIComponent(calendario_os) +
+      "&cpf=" +
+      encodeURIComponent(cpf) +
+      "&num_carga=" +
+      encodeURIComponent(num_carga);
+    xhrPost(
+      PLANILHA_URL,
+      body,
+      "application/x-www-form-urlencoded",
+      "arraybuffer",
+      function (x) {
+        var buf = x.response;
+        localStorage.setItem(
+          LS_KEYS.lastPlanilhaBlob,
+          arrayBufferToBase64(buf)
+        );
+        ingestConferenciaFromBuffer(buf, function () {
           transmitir();
         });
+      },
+      function (e) {
+        if (ls) ls.textContent = "Erro ao baixar: " + e.message;
+      }
+    );
+  }
+  function carregarProdutosServidor() {
+    var cpf = onlyDigits(state.cpf),
+      calendario_os = onlyDigits(state.calendarioOS),
+      ps = $("#loadProdStatus");
+    if (!isValidCPF(cpf)) {
+      alert("CPF inválido. Corrija na aba Configuração.");
+      return;
+    }
+    if (!calendario_os) {
+      alert("Informe o Calendário OS na aba Configuração.");
+      return;
+    }
+    if (ps) ps.textContent = "Baixando cadastro...";
+    var body =
+      "calendario_os=" +
+      encodeURIComponent(calendario_os) +
+      "&cpf=" +
+      encodeURIComponent(cpf);
+    xhrPost(
+      PLANILHA_URL,
+      body,
+      "application/x-www-form-urlencoded",
+      "arraybuffer",
+      function (x) {
+        ingestProdutosFromBuffer(x.response, ps);
+      },
+      function (e) {
+        if (ps) ps.textContent = "Erro ao baixar: " + e.message;
+      }
+    );
+  }
+  function arrayBufferToBase64(ab) {
+    var u8 = new Uint8Array(ab),
+      s = "",
+      i;
+    for (i = 0; i < u8.length; i++) s += String.fromCharCode(u8[i]);
+    return btoa(s);
+  }
+  function base64ToBlob(b64, ct) {
+    ct = ct || "application/octet-stream";
+    var byteChars = atob(b64),
+      byteNums = new Array(byteChars.length),
+      i;
+    for (i = 0; i < byteChars.length; i++)
+      byteNums[i] = byteChars.charCodeAt(i);
+    return new Blob([new Uint8Array(byteNums)], { type: ct });
+  }
 
-        renderMergedTable();
-        refreshTx();
-      });
-    </script>
-  </body>
+  /* ===== Excluir bipagem ===== */
+  function deleteBipagem(ts, codCarga, gtin14) {
+    try {
+      if (!confirm("Tem certeza que deseja excluir esta bipagem?")) return;
+      var idx = -1,
+        i,
+        it,
+        cargaAlvo = String(codCarga || "").trim(),
+        gtinAlvo = String(gtin14 || "").trim();
+      for (i = 0; i < state.itens.length; i++) {
+        it = state.itens[i];
+        if (
+          String(it.ts || "") === String(ts || "") &&
+          String(it.CODCARGA || "").trim() === cargaAlvo &&
+          leftPad(onlyDigits(it.EAN || ""), 14) === gtinAlvo
+        ) {
+          idx = i;
+          break;
+        }
+      }
+      if (idx === -1) {
+        alert("Item não encontrado para exclusão.");
+        return;
+      }
+      state.itens.splice(idx, 1);
+      saveItens();
+      refreshBadges();
+      renderMergedTable();
+      refreshTx();
+      refreshCargaSelect();
+    } catch (e) {
+      alert("Falha ao excluir: " + (e && e.message ? e.message : e));
+    }
+  }
+
+  /* ===== Reset para novo Calendário OS (preserva CPF) ===== */
+  function resetForNewOS(newOS) {
+       transmitir();
+    // limpa tudo que é ligado ao calendário anterior
+    localStorage.removeItem(LS_KEYS.itens);
+    localStorage.removeItem(LS_KEYS.produtos);
+    localStorage.removeItem(LS_KEYS.lastPlanilhaBlob);
+    localStorage.removeItem(LS_KEYS.carga_cfg);
+
+    state.itens = [];
+    state.produtosMap = new Map();
+    state.produtosCount = 0;
+    state.planilhaByCarga = new Map();
+    state.planAggByCarga = new Map();
+    state.codigoCargaCfg = "";
+
+    // aplica novo OS e salva
+    state.calendarioOS = onlyDigits(newOS);
+    localStorage.setItem(LS_KEYS.os, state.calendarioOS);
+
+    // UI
+    if ($("#codigoCarga")) $("#codigoCarga").value = "";
+    refreshBadges();
+    renderMergedTable();
+    refreshTx();
+    refreshCargaSelect();
+
+    // transmite tudo novamente (estado atual, possivelmente vazio)
+
+  }
+
+  /* ===== Bootstrap ===== */
+  window.addEventListener("DOMContentLoaded", function () {
+    loadState();
+    refreshBadges();
+    applyLocks();
+    if ($("#cpf")) $("#cpf").value = maskCPF(state.cpf);
+    if ($("#calendarioOs")) $("#calendarioOs").value = state.calendarioOS;
+
+    onId("cpf", "input", function (e) {
+      e.target.value = maskCPF(e.target.value);
+    });
+    onId("cpf", "blur", function () {
+      var val = $("#cpf") ? $("#cpf").value : "",
+        ok = isValidCPF(val);
+      if ($("#cpfErr")) {
+        if (ok) {
+          $("#cpfErr").classList.add("hidden");
+        } else {
+          $("#cpfErr").classList.remove("hidden");
+        }
+      }
+      if (ok) {
+        state.cpf = onlyDigits(val);
+        localStorage.setItem(LS_KEYS.cpf, state.cpf);
+        refreshBadges();
+        applyLocks();
+      }
+    });
+
+    onId("calendarioOs", "input", function () {
+      var tmp = onlyDigits(
+        ($("#calendarioOs") && $("#calendarioOs").value) || ""
+      );
+      // Não salva automaticamente; salva somente no botão "Salvar"
+    });
+
+    onId("btnSalvarOS", "click", function () {
+      var novoOS = onlyDigits(
+        ($("#calendarioOs") && $("#calendarioOs").value) || ""
+      );
+      if (!novoOS) {
+        alert("Informe um Calendário OS válido.");
+        return;
+      }
+      if (!isValidCPF(state.cpf)) {
+        alert("Salve um CPF válido antes.");
+        return;
+      }
+      var msg =
+        "Tem certeza que deseja salvar o novo Calendário OS " +
+        novoOS +
+        "?\n\nATENÇÃO: O sistema APAGARÁ TODOS os dados do Calendário OS atual (itens bipados, divergências e cadastro local) e reiniciará do zero.\nApós confirmar, os dados serão transmitidos novamente.";
+      if (confirm(msg)) {
+        resetForNewOS(novoOS);
+      }
+    });
+
+    onId("codigoCargaCfgSel", "change", function () {
+      state.codigoCargaCfg = (
+        ($("#codigoCargaCfgSel") && $("#codigoCargaCfgSel").value) ||
+        ""
+      ).trim();
+      localStorage.setItem(LS_KEYS.carga_cfg, state.codigoCargaCfg);
+    });
+
+    onId("btnBaixarPlanilhaSrv", "click", baixarPlanilhaServidor);
+    // Botão "Recarregar última" REMOVIDO conforme solicitado
+    onId("btnCarregarProdutos", "click", carregarProdutosServidor);
+
+    onId("codigoCarga", "input", function () {
+      renderMergedTable();
+      refreshTx();
+    });
+    onId("eanInput", "keydown", function (e) {
+      var key = e.key || e.keyCode;
+      if (key === "Enter" || key === 13) {
+        e.preventDefault();
+        if (isLocked()) return;
+        onScanSubmit();
+      }
+    });
+
+    onId("btnTransmitir", "click", function () {
+      if (isLocked()) {
+        alert("Salve um CPF válido na aba Configuração.");
+        return;
+      }
+      transmitir();
+    });
+
+    /* NOVO listener: Continuar de onde parei */
+    onId("btnContinuar", "click", function () {
+      if (isLocked()) {
+        alert("Salve um CPF válido na aba Configuração.");
+        return;
+      }
+      continuarDeOndeParei();
+    });
+
+    /* Listeners do modal EAN-13 */
+    onId("qtyOk", "click", function () {
+      confirmQtyModal();
+    });
+    onId("qtyCancel", "click", function () {
+      closeQtyModal();
+    });
+    onId("qtyInput", "keydown", function (e) {
+      var k = e.key || e.keyCode;
+      if (k === "Enter" || k === 13) {
+        e.preventDefault();
+        confirmQtyModal();
+      }
+      if (k === "Escape" || k === 27) {
+        e.preventDefault();
+        closeQtyModal();
+      }
+    });
+
+    renderMergedTable();
+    refreshTx();
+  });
+</script>
+</body>
 </html>
